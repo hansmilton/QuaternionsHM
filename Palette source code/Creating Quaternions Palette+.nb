@@ -1,0 +1,258 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     11370,        250]
+NotebookOptionsPosition[     10982,        235]
+NotebookOutlinePosition[     11414,        252]
+CellTagsIndexPosition[     11371,        249]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"NotebookSave", "[", "\n", "\t", 
+  RowBox[{
+   RowBox[{"CreatePalette", "[", "\n", "\t\t", 
+    RowBox[{
+     RowBox[{"DynamicModule", "[", "\n", "\t\t\t", 
+      RowBox[{
+       RowBox[{"{", "loaded", "}"}], ",", "\n", "\t\t\t", 
+       RowBox[{"Grid", "[", 
+        RowBox[{
+         RowBox[{"{", "\n", "\t\t\t\t", 
+          RowBox[{
+           RowBox[{"{", "\n", "\t\t\t\t\t", 
+            RowBox[{
+             RowBox[{"Dynamic", "[", "\n", "\t\t\t\t\t\t", 
+              RowBox[{
+               RowBox[{"If", "[", 
+                RowBox[{"loaded", ",", "\n", "\t\t\t\t\t\t\t", 
+                 RowBox[{"Spacer", "@", "5"}], ",", "\n", "\t\t\t\t\t\t\t", 
+                 RowBox[{"Button", "[", "\n", "\t\t\t\t\t\t\t\t", 
+                  RowBox[{
+                  "\"\<Load package\>\"", ",", "\n", "\t\t\t\t\t\t\t\t", 
+                   RowBox[{
+                    RowBox[{"Needs", "@", "\"\<QuaternionsHM`\>\""}], ";", 
+                    RowBox[{"loaded", "=", "True"}]}], ",", 
+                   RowBox[{"Background", "\[Rule]", "White"}]}], "\n", 
+                  "\t\t\t\t\t\t\t", "]"}]}], "\n", "\t\t\t\t\t\t", "]"}], ",",
+                "\n", "\t\t\t\t\t\t", 
+               RowBox[{"Initialization", "\[RuleDelayed]", 
+                RowBox[{"(", 
+                 RowBox[{"loaded", "=", 
+                  RowBox[{"Or", "[", 
+                   RowBox[{
+                    RowBox[{"MemberQ", "[", 
+                    RowBox[{"$ContextPath", ",", "\"\<QuaternionsHM`\>\""}], 
+                    "]"}], ",", 
+                    RowBox[{
+                    RowBox[{"Options", "[", 
+                    RowBox[{
+                    RowBox[{"InputNotebook", "[", "]"}], ",", "CellContext"}],
+                     "]"}], "===", 
+                    RowBox[{"{", 
+                    RowBox[{"CellContext", "\[Rule]", "Notebook"}], "}"}]}]}],
+                    "]"}]}], ")"}]}]}], "\n", "\t\t\t\t\t", "]"}], ",", "\n", 
+             "\t\t\t\t\t", "SpanFromLeft", ",", "SpanFromLeft"}], "\n", 
+            "\t\t\t\t", "}"}], ",", "\n", "\t\t\t\t", 
+           RowBox[{"{", "\n", "\t\t\t\t\t", 
+            RowBox[{
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{"\"\<quat\>\"", ",", "\"\<Quaternion template\>\""}], 
+                "]"}], ",", 
+               RowBox[{"quat", "[", 
+                RowBox[{
+                "\[Placeholder]", ",", "\[Placeholder]", ",", 
+                 "\[Placeholder]", ",", "\[Placeholder]"}], "]"}], ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}], ",", "\n", 
+             "\t\t\t\t\t", 
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<Q\[Cross]Q\>\"", ",", 
+                 "\"\<Multiplication of quaternions\>\""}], "]"}], ",", 
+               RowBox[{"\[SelectionPlaceholder]", "**", "\[Placeholder]"}], 
+               ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}], ",", "\n", 
+             "\t\t\t\t\t", 
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<\!\(\*SuperscriptBox[\(Q\), \(-1\)]\)\>\"", ",", 
+                 "\"\<Reciprocal of quaternion\>\""}], "]"}], ",", 
+               RowBox[{"(", 
+                RowBox[{"Power", "[", 
+                 RowBox[{"\[SelectionPlaceholder]", ",", 
+                  RowBox[{"-", "1"}]}], "]"}], ")"}], ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}]}], "\n", 
+            "\t\t\t\t", "}"}], ",", "\n", "\t\t\t\t", 
+           RowBox[{"{", "\n", "\t\t\t\t\t", 
+            RowBox[{
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<Q\[LeftRightArrow]{}\>\"", ",", 
+                 "\"\<Quaternion \[LeftRightArrow] List\>\""}], "]"}], ",", 
+               RowBox[{
+               "quatToFromList", "[", "\[SelectionPlaceholder]", "]"}], ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}], ",", "\n", 
+             "\t\t\t\t\t", 
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<Q\[LeftRightArrow]\[Theta]V\>\"", ",", 
+                 "\"\<Quaternion \[LeftRightArrow] Angle/Axis\>\""}], "]"}], 
+               ",", 
+               RowBox[{
+               "quatToFrom\[Theta]V", "[", "\[SelectionPlaceholder]", "]"}], 
+               ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}], ",", "\n", 
+             "\t\t\t\t\t", 
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<Q\[LeftRightArrow]M\>\"", ",", 
+                 "\"\<Quaternion \[LeftRightArrow] Matrix\>\""}], "]"}], ",", 
+               RowBox[{
+               "quatToFromMatrix", "[", "\[SelectionPlaceholder]", "]"}], ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}]}], "\n", 
+            "\t\t\t\t", "}"}], ",", "\n", "\t\t\t\t", 
+           RowBox[{"{", "\n", "\t\t\t\t\t", 
+            RowBox[{
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<Q\[Cross]V\>\"", ",", 
+                 "\"\<Quaternion rotation of a vector\>\""}], "]"}], ",", 
+               RowBox[{"quatRotateVector", "[", 
+                RowBox[{"\[SelectionPlaceholder]", ",", "\[Placeholder]"}], 
+                "]"}], ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}], ",", "\n", 
+             "\t\t\t\t\t", 
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<Q\[LeftRightArrow]EUL\>\"", ",", 
+                 "\"\<Quaternion \[LeftRightArrow] Euler ZYX angles\>\""}], 
+                "]"}], ",", 
+               RowBox[{
+               "quatToFromEulerZYX", "[", "\[SelectionPlaceholder]", "]"}], 
+               ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}], ",", "\n", 
+             "\t\t\t\t\t", 
+             RowBox[{"PasteButton", "[", 
+              RowBox[{
+               RowBox[{"Tooltip", "[", 
+                RowBox[{
+                "\"\<AlignedM\[RightArrow]Q\>\"", ",", 
+                 "\"\<Quaternion from interactive spec of matrix\>\""}], 
+                "]"}], ",", 
+               RowBox[{"quatFromAlignedMatrix", "[", "]"}], ",", 
+               RowBox[{"Enabled", "\[Rule]", 
+                RowBox[{"Dynamic", "@", "loaded"}]}]}], "]"}]}], "\n", 
+            "\t\t\t\t", "}"}], ",", "\n", "\t\t\t\t", 
+           RowBox[{"{", "\n", "\t\t\t\t\t", 
+            RowBox[{
+             RowBox[{"Button", "[", "\n", "\t\t\t\t\t\t", 
+              RowBox[{
+              "\"\<Inbuilt functions info\>\"", ",", "\n", "\t\t\t\t\t\t", 
+               RowBox[{"CreatePalette", "[", "\n", "\t\t\t\t\t\t\t", 
+                RowBox[{
+                 RowBox[{"Panel", "[", "\n", "\t\t\t\t\t\t\t\t", 
+                  RowBox[{
+                   RowBox[{"Column", "[", 
+                    RowBox[{"{", "\n", "\t\t\t\t\t\t\t\t\t", 
+                    RowBox[{
+                    "\"\<Inbuilt functions that can take \
+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\) as argument:\>\"", ",", "\n",
+                     "\t\t\t\t\t\t\t\t\t", 
+                    "\"\<- Non commutative multiplication, \
+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)**\!\(\*StyleBox[\"quat\",\
+FontSlant->\"Italic\"]\).\>\"", ",", "\n", "\t\t\t\t\t\t\t\t\t", 
+                    "\"\<- Power, \
+\!\(\*SuperscriptBox[StyleBox[\"quat\",FontSlant->\"Italic\"], \
+StyleBox[\"p\",FontSlant->\"Italic\"]]\). The exponent \
+\!\(\*StyleBox[\"p\",FontSlant->\"Italic\"]\) has to be a scalar.\>\"", ",", 
+                    "\n", "\t\t\t\t\t\t\t\t\t", "\"\<- Conjugate\>\"", ",", 
+                    "\n", "\t\t\t\t\t\t\t\t\t", "\"\<- Norm\>\"", ",", "\n", 
+                    "\t\t\t\t\t\t\t\t\t", "\"\<- Normalize\>\"", ",", "\n", 
+                    "\t\t\t\t\t\t\t\t\t", "\"\<- Exp\>\"", ",", "\n", 
+                    "\t\t\t\t\t\t\t\t\t", "\"\<- Log\>\"", ",", "\n", 
+                    "\t\t\t\t\t\t\t\t\t", 
+                    "\"\<- Times, \
+scalar*\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)\>\"", ",", "\n", 
+                    "\t\t\t\t\t\t\t\t\t", 
+                    "\"\<- Plus, \
+scalar+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\) and \
+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)+\!\(\*StyleBox[\"quat\",\
+FontSlant->\"Italic\"]\)\>\""}], "\n", "\t\t\t\t\t\t\t\t", "}"}], "]"}], ",", 
+                   "\n", "\t\t\t\t\t\t\t\t", 
+                   RowBox[{"Background", "\[Rule]", "LightBlue"}], ",", 
+                   RowBox[{"BaseStyle", "\[Rule]", "14"}]}], "\n", 
+                  "\t\t\t\t\t\t\t", "]"}], ",", "\n", "\t\t\t\t\t\t\t", 
+                 RowBox[{"WindowTitle", "\[Rule]", "None"}], ",", 
+                 RowBox[{"WindowMargins", "\[Rule]", "Automatic"}], ",", 
+                 RowBox[{"Saveable", "\[Rule]", "False"}]}], "\n", 
+                "\t\t\t\t\t\t", "]"}]}], "\n", "\t\t\t\t\t", "]"}], ",", "\n",
+              "\t\t\t\t\t", "SpanFromLeft", ",", "SpanFromLeft"}], "\n", 
+            "\t\t\t\t", "}"}]}], "\n", "\t\t\t", "}"}], ",", 
+         RowBox[{"Alignment", "\[Rule]", "Center"}]}], "]"}], ",", "\n", 
+       "\t\t\t", 
+       RowBox[{"Initialization", "\[RuleDelayed]", 
+        RowBox[{"(", 
+         RowBox[{"loaded", "=", "False"}], ")"}]}]}], "\n", "\t\t", "]"}], 
+     ",", "\n", "\t\t", 
+     RowBox[{"WindowTitle", "\[Rule]", "\"\<Quaternions Palette+\>\""}]}], 
+    "\n", "\t", "]"}], ",", "\n", "\t", 
+   RowBox[{"Interactive", "\[Rule]", "True"}]}], "\n", "]"}]], "Input",Express\
+ionUUID->"bd1de4a7-430d-430f-a59e-87132e5b3c8e"]
+},
+WindowSize->{1338, 833},
+WindowMargins->{{Automatic, 68}, {Automatic, 67}},
+TrackCellChangeTimes->False,
+FrontEndVersion->"12.2 for Microsoft Windows (64-bit) (December 12, 2020)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"1863bfb1-3ab5-49d0-a5cd-006f550d0f60"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 10420, 213, 1276, "Input",ExpressionUUID->"bd1de4a7-430d-430f-a59e-87132e5b3c8e"]
+}
+]
+*)
+
