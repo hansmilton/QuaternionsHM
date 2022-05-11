@@ -1,0 +1,181 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      6254,        171]
+NotebookOptionsPosition[      5793,        153]
+NotebookOutlinePosition[      6242,        171]
+CellTagsIndexPosition[      6199,        168]
+WindowTitle->Quaternions Palette
+WindowFrame->Palette*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ TagBox[GridBox[{
+    {
+     TemplateBox[{2},
+      "Spacer1"], "\[SpanFromLeft]", "\[SpanFromLeft]"},
+    {
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"quat\"\>",
+        "\"Quaternion template\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Quaternion template", "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->RowBox[{"quat", "[", 
+         RowBox[{
+          "\[Placeholder]", ",", "\[Placeholder]", ",", "\[Placeholder]", ",",
+            "\[Placeholder]"}], "]"}]], 
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"Q\[Cross]Q\"\>",
+        "\"Multiplication of quaternions\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Multiplication of quaternions", "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->
+       RowBox[{"\[SelectionPlaceholder]", "**", "\[Placeholder]"}]], 
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"\\!\\(\\*SuperscriptBox[\\(Q\\), \\(-1\\)]\\)\"\>",
+        "\"Reciprocal of quaternion\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Reciprocal of quaternion", "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->FractionBox["1", "\[SelectionPlaceholder]"]]},
+    {
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"Q\[LeftRightArrow]{}\"\>",
+        "\"Quaternion \[LeftRightArrow] List\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Quaternion \[LeftRightArrow] List", "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->
+       RowBox[{"quatToFromList", "[", "\[SelectionPlaceholder]", "]"}]], 
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"Q\[LeftRightArrow]\[Theta]V\"\>",
+        "\"Quaternion \[LeftRightArrow] Angle/Axis\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Quaternion \[LeftRightArrow] Angle/Axis", "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->
+       RowBox[{"quatToFrom\[Theta]V", "[", "\[SelectionPlaceholder]", "]"}]], 
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"Q\[LeftRightArrow]M\"\>",
+        "\"Quaternion \[LeftRightArrow] Matrix\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Quaternion \[LeftRightArrow] Matrix", "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->
+       RowBox[{"quatToFromMatrix", "[", "\[SelectionPlaceholder]", "]"}]]},
+    {
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"Q\[Cross]V\"\>",
+        "\"Quaternion rotation of a vector\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Quaternion rotation of a vector", "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->RowBox[{"quatRotateVector", "[", 
+         RowBox[{"\[SelectionPlaceholder]", ",", "\[Placeholder]"}], "]"}]], 
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"Q\[LeftRightArrow]EUL\"\>",
+        "\"Quaternion \[LeftRightArrow] Euler ZYX angles\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Quaternion \[LeftRightArrow] Euler ZYX angles", 
+        "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->
+       RowBox[{"quatToFromEulerZYX", "[", "\[SelectionPlaceholder]", "]"}]], 
+     ButtonBox[
+      TagBox[
+       TooltipBox["\<\"AlignedM\[RightArrow]Q\"\>",
+        "\"Quaternion from interactive spec of matrix\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "Quaternion from interactive spec of matrix", 
+        "Tooltip"]& ],
+      BaseStyle->"Paste",
+      ButtonData->RowBox[{"quatFromAlignedMatrix", "[", "]"}]]},
+    {
+     ButtonBox["\<\"Inbuilt functions info\"\>",
+      Appearance->Automatic,
+      ButtonFunction:>CreatePalette[
+        Panel[
+         Column[{
+          "Inbuilt functions that can take \
+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\) as argument:", 
+           "- Non commutative multiplication, \
+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)**\!\(\*StyleBox[\"quat\",\
+FontSlant->\"Italic\"]\).", 
+           "- Power, \
+\!\(\*SuperscriptBox[StyleBox[\"quat\",FontSlant->\"Italic\"], \
+StyleBox[\"p\",FontSlant->\"Italic\"]]\). The exponent \
+\!\(\*StyleBox[\"p\",FontSlant->\"Italic\"]\) has to be a scalar.", 
+           "- Conjugate", "- Norm", "- Normalize", "- Exp", "- Log", 
+           "- Times, scalar*\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)",
+            "- Plus, scalar+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\) \
+and \!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)+\!\(\*StyleBox[\"quat\",\
+FontSlant->\"Italic\"]\)"}], Background -> LightBlue, BaseStyle -> 14], 
+        WindowTitle -> None, WindowMargins -> Automatic, Saveable -> False],
+      Evaluator->Automatic,
+      Method->"Preemptive"], "\[SpanFromLeft]", "\[SpanFromLeft]"}
+   },
+   AutoDelete->False,
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]],
+ CellMargins->{{0, 0}, {0, 0}},
+ CellBracketOptions->{"Color"->RGBColor[0.269993, 0.308507, 0.6]},
+ CellHorizontalScrolling->True,
+ PageBreakAbove->True,
+ PageBreakWithin->False,
+ ShowAutoStyles->True,
+ LineSpacing->{1.25, 0},
+ AutoItalicWords->{},
+ ScriptMinSize->9,
+ ShowStringCharacters->False,
+ FontFamily:>CurrentValue["PanelFontFamily"],
+ FontSize:>CurrentValue[
+  "PanelFontSize"],ExpressionUUID->"6f0715bd-b673-49ff-8d05-211c4a1a460c"]
+},
+WindowSize->All,
+WindowMargins->{{Automatic, 0}, {Automatic, 0}},
+WindowElements->{},
+WindowTitle->"Quaternions Palette",
+FrontEndVersion->"12.2 for Microsoft Windows (64-bit) (December 12, 2020)",
+StyleDefinitions->"Palette.nb",
+ExpressionUUID->"37a76c8f-0f9e-400c-8ea5-5e4836fd1113"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[592, 21, 5197, 130, 116, InheritFromParent,ExpressionUUID->"6f0715bd-b673-49ff-8d05-211c4a1a460c",
+ PageBreakAbove->True,
+ PageBreakWithin->False]
+}
+]
+*)
+
+(* End of internal cache information *)
+
