@@ -29,7 +29,7 @@ In addition 6 new functions:
 - quatToFromEulerZYX
 - quatFromAlignedMatrix
 ## Matrix representation
-Quaternions can be converted to/from matrices.<br />
+Any quaternion can be converted to a 3x3 matrix.<br />
 There are two different conventions for representing rotations by matrices:
 - Passive, or coordinate frame oriented
 - Active, or vector oriented
