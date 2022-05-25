@@ -62,7 +62,7 @@
 
 
 (* ::Text:: *)
-(*Quaternions can be converted to/from matrices.*)
+(*Any quaternion can be converted to a 3x3 matrix.*)
 (*There are two different conventions for representing rotations by matrices:*)
 (*- Passive, or coordinate frame oriented*)
 (*- Active, or vector oriented*)
@@ -1202,7 +1202,7 @@ vOut[v_List]:=v//Simplify//roundNumbers[#]&
 ]
 
 
-roundNumbers[x_]:=ReplaceAll[x,n_?NumberQ:>If[Abs[n-Round@n]<10^-12,Round@n,n]]
+roundNumbers[x_]:=ReplaceAll[x,n_?MachineNumberQ:>If[Abs[n-Round@n]<10^-12,Round@n,n]]
 
 
 (* ::Section::Closed:: *)
