@@ -382,7 +382,7 @@ quatFromAlignedMatrix[]:=N@quatToFromMatrix[alignedMatrixDialogs[]]/.{0.->0,1.->
 (*Checking arguments to public functions*)
 
 
-scalarQ[e_]:=ReplaceAll[e,s_Symbol/;!Context@s==="System`":>RandomReal[]]//NumericQ
+scalarQ[e_]:=And[FreeQ[e,Complex],ReplaceAll[e,s_Symbol/;!Context@s==="System`":>RandomReal[]]//NumericQ]
 
 
 listQ[l_]:=And[Head@l===List,scalarQ[#]&/@l==={True,True,True,True}]
