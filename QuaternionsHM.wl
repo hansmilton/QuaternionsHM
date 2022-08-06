@@ -269,7 +269,7 @@ quat/:Power[base_quat,exponent_]/;quatQ[base]&&scalarQ[exponent]:=Exp[exponent*L
 quat/:Conjugate[q:quat[q0_,q1_,q2_,q3_]]/;quatQ[q]:=quat[q0,-q1,-q2,-q3]
 
 
-quat/:Norm[q_quat]/;quatQ[q]:=Norm[List@@q]
+quat/:Norm[q_quat]/;quatQ[q]:=Norm[List@@q]/.Abs[s_]^2:>s^2
 
 
 quat/:Normalize[q_quat]/;quatQ[q]:=Normalize[List@@q]//qOut
@@ -283,7 +283,7 @@ quat/:Exp[q_quat]/;quatQ[q]:=With[
 
 quat/:Log[q_quat]/;quatQ[q]:=With[
   {q0=First@q,qV=Rest[List@@q]},
-  {Log@Simplify@Norm[q], Normalize[qV] ArcCos[q0/Norm[q]]}//Flatten//quat@@#&//Chop
+  {Log@Simplify@Norm[q], (Normalize[qV]/.Abs[s_]^2:>s^2)*ArcCos[q0/Norm[q]]}//Flatten//quat@@#&//Chop
 ]
 
 
@@ -1179,7 +1179,7 @@ qOut[qIn_List]:=With[
         1/2 Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2]:>Cos[\[Theta]],
         1/2 Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2-z_^2*Sin[\[Theta]_]^2]:>Cos[\[Theta]],
         x_*Sin[a_]/Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2]:>x*Sin[\[Theta]],
-        x_*Sin[a_]/Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2]:>x*Sin[\[Theta]]
+        x_*Sin[a_]/Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2]:>x*Sin[\[Theta]],Abs[s_]^2:>s^2
       },
     39,rewriteQuatType39[q],
     41,rewriteQuatType41[q],
@@ -1198,7 +1198,7 @@ vOut[v_List]:=v//Simplify//roundNumbers[#]&
 
 \[Theta]VOut[rotIn_List]:=With[
   {rot=roundNumbers[rotIn]},
-  Simplify[PowerExpand[rot]/. 1/Sqrt[1-Cos[\[Theta]_]^2]:>1/Sin[\[Theta]]]
+  Simplify[PowerExpand[rot]/. 1/Sqrt[1-Cos[\[Theta]_]^2]:>1/Sin[\[Theta]]]/.Abs[s_]^2:>s^2
 ]
 
 
