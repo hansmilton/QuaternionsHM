@@ -263,8 +263,10 @@ Module[
 ]
 
 
+quat/:Power[base_quat,-1]/;quatQ[base]&&Nor[Norm@base===0,Norm@base===0.]:=
+  Conjugate[base]/Norm[base]^2/.sqAbsRule
 quat/:Power[base_quat,exponent_]/;quatQ[base]&&scalarQ[exponent]&&Nor[Norm@base===0,Norm@base===0.]:=
-  If[exponent===-1,Conjugate[base]/Norm[base]^2/.sqAbsRule,Exp[exponent*Log@base]]
+  Exp[exponent*Log@base]
 
 
 quat/:Conjugate[q:quat[q0_,q1_,q2_,q3_]]/;quatQ[q]:=quat[q0,-q1,-q2,-q3]
@@ -284,7 +286,7 @@ quat/:Exp[q_quat]/;quatQ[q]:=With[
 
 quat/:Log[q_quat]/;quatQ[q]&&Nor[Norm@q===0,Norm@q===0.]:=With[
   {q0=First@q,qV=Rest[List@@q]},
-  {Log@TrigFactor@Norm[q], (Normalize[qV]/.sqAbsRule)*ArcCos[q0/Norm[q]]}//Flatten//quat@@#&//Chop
+  {Log@TrigFactor@Norm[q], (Normalize[qV]/.sqAbsRule)*ArcCos[q0/Norm[q]]}//Flatten//quat@@#&//roundNumbers
 ]
 
 
