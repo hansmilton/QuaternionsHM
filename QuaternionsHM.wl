@@ -162,8 +162,8 @@ StyleBox[\"list\",\nFontSlant->\"Italic\"]\)]. Returns quaternion.";
 
 
 quatToFrom\[Theta]V::usage=
-"Conversion of the representation of a rotation. Between quaternion and angle / axis of rotation.
-The axis of rotation is a 3D vector. As input it can have any length. As output it has unit length.
+"Converts a rotation from quaternion to angle-axis representation, or vice verse. The axis
+of rotation is a 3D vector. As input it can have any length. As output it has unit length.
 Symbolic input of quaternion or axis vector is assumed to be normalized.
 
 quatToFrom\[Theta]V[\!\(\*
@@ -179,7 +179,7 @@ StyleBox[\"vector\",\nFontSlant->\"Italic\"]\)}]. Returns quaternion.";
 
 
 quatToFromMatrix::usage=
-"Converts a quaternion to matrix, or vice verse.
+"Converts a quaternion to a 3x3 matrix, or vice verse.
 An input matrix where all elements are numeric has to be righthanded.
 An input matrix where all elements are explicit numbers does not have to be normalized.
 
@@ -253,7 +253,7 @@ Begin["`Private`"]
 (*Upvalues for quat*)
 
 
-quat/:NonCommutativeMultiply[p:quat[p0_,p1_,p2_,p3_],q:quat[q0_,q1_,q2_,q3_]]/;quatQ[p]&&quatQ[q]:=
+quat/:NonCommutativeMultiply[quat[p0_,p1_,p2_,p3_]?quatQ,quat[q0_,q1_,q2_,q3_]?quatQ]:=
 Module[
   {pV,qV,r0,rV},
   pV={p1,p2,p3}; qV={q1,q2,q3};
@@ -263,38 +263,38 @@ Module[
 ]
 
 
-quat/:Power[base_quat,-1]/;quatQ[base]&&Nor[Norm@base===0,Norm@base===0.]:=
+quat/:Power[base_quat?quatQ,-1]/;Nor[Norm@base===0,Norm@base===0.]:=
   Conjugate[base]/Norm[base]^2/.sqAbsRule
-quat/:Power[base_quat,exponent_]/;quatQ[base]&&scalarQ[exponent]&&Nor[Norm@base===0,Norm@base===0.]:=
+quat/:Power[base_quat?quatQ,exponent_?scalarQ]/;Nor[Norm@base===0,Norm@base===0.]:=
   Exp[exponent*Log@base]
 
 
-quat/:Conjugate[q:quat[q0_,q1_,q2_,q3_]]/;quatQ[q]:=quat[q0,-q1,-q2,-q3]
+quat/:Conjugate[quat[q0_,q1_,q2_,q3_]?quatQ]:=quat[q0,-q1,-q2,-q3]
 
 
-quat/:Norm[q_quat]/;quatQ[q]:=Norm[List@@q]/.sqAbsRule
+quat/:Norm[q_quat?quatQ]:=Norm[List@@q]/.sqAbsRule
 
 
-quat/:Normalize[q_quat]/;quatQ[q]:=Normalize[List@@q]//qOut
+quat/:Normalize[q_quat?quatQ]:=Normalize[List@@q]//qOut
 
 
-quat/:Exp[q_quat]/;quatQ[q]:=With[
+quat/:Exp[q_quat?quatQ]:=With[
   {q0=First@q,qV=Rest[List@@q]},
   E^q0 {Cos[Norm@qV],Normalize[qV] Sin[Norm@qV]}//Flatten//qOut
 ]
 
 
-quat/:Log[q_quat]/;quatQ[q]&&Nor[Norm@q===0,Norm@q===0.]:=With[
+quat/:Log[q_quat?quatQ]/;Nor[Norm@q===0,Norm@q===0.]:=With[
   {q0=First@q,qV=Rest[List@@q]},
   {Log@TrigFactor@Norm[q], (Normalize[qV]/.sqAbsRule)*ArcCos[q0/Norm[q]]}//Flatten//quat@@#&//roundNumbers
 ]
 
 
-quat/:Times[s_,q_quat]/;scalarQ[s]&&quatQ[q]:=s*#&/@q
+quat/:Times[s_?scalarQ,q_quat?quatQ]:=s*#&/@q
 
 
-quat/:Plus[s_,q_quat]/;scalarQ[s]&&quatQ[q]:=s+#&/@q
-quat/:Plus[p_quat,q_quat]/;quatQ[p]&&quatQ[q]:=Apply[quat,List@@p+List@@q]
+quat/:Plus[s_?scalarQ,q_quat?quatQ]:=s+#&/@q
+quat/:Plus[p_quat?quatQ,q_quat?quatQ]:=Apply[quat,List@@p+List@@q]
 
 
 quat/:Times[NonCommutativeMultiply[p_quat,1],q_quat]:=p**q
