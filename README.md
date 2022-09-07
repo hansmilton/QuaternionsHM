@@ -39,5 +39,8 @@ The two conventions are transposes of each other.
 This package uses the passive convention.<br />
 The matrix rows are the base axes of a rotated frame, as seen from the reference frame.
 
-In contrast Mathematicas inbuilt function RotationMatrix use the active convention.<br />
+In contrast, Mathematica's inbuilt function RotationMatrix uses the active convention.<br />
 The matrix rows are the base axes of the reference frame, as seen from a rotated frame.
+
+The passive convention matches the result of mapping the function quatRotateVector over<br />
+the rows of an identity 3x3 matrix.
