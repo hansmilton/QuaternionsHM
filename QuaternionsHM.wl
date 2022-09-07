@@ -75,8 +75,13 @@
 
 
 (* ::Text:: *)
-(*In contrast Mathematicas inbuilt function RotationMatrix use the active convention.*)
+(*In contrast, Mathematica's inbuilt function RotationMatrix uses the active convention.*)
 (*The matrix rows are the base axes of the reference frame, as seen from a rotated frame.*)
+
+
+(* ::Text:: *)
+(*The passive convention matches the result of mapping the function quatRotateVector over*)
+(*the rows of an identity 3x3 matrix.*)
 
 
 (* ::Subsection::Closed:: *)
@@ -350,13 +355,9 @@ quatToFromMatrix[m_?matQ]:=Switch[mType@m,
 ]
 
 
-quatRotateVector[q_?quatQ,v_?vectQ]:=Module[
-  {q0,qV,r0,rV},
-  q0=First@q;
-  qV=Take[List@@q,-3];
-  r0=Dot[qV,v];
-  rV=q0*v+Cross[qV,v];
-  q0*rV+r0*qV+Cross[rV,-qV]//vOut
+quatRotateVector[quat[q0_,q1_,q2_,q3_]?quatQ,v_?vectQ]:=With[
+  {qV={q1,q2,q3}},
+  (q0^2-q1^2-q2^2-q3^2)*v+2*Dot[qV,v]*qV+2*q0*Cross[qV,v]//vOut
 ]
 
 
