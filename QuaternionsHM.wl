@@ -815,18 +815,18 @@ mBasicFromQ[q:quat[q0_,q1_,q2_,q3_]]:=Module[
 
 qFromNumberM[minput_]:=
 Module[
-  {m,\[CapitalDelta]Vectors,difforder,axisIndexA,axisIndexB,projRotAxMax,axis,angle},
+  {m,\[CapitalDelta]Vectors,difforder,indexA,indexB,unitRotAx,scaledRotAx,angle},
   m=Orthogonalize@minput;
   \[CapitalDelta]Vectors=m-IdentityMatrix@3;
   difforder=Ordering@N@Diagonal@m;
-  axisIndexA=First@difforder;
-  axisIndexB=difforder[[2]];
-  axis=Normalize[\[CapitalDelta]Vectors[[axisIndexA]]\[Cross]\[CapitalDelta]Vectors[[axisIndexB]]];
-  projRotAxMax=Dot[m[[axisIndexA]],axis]*axis;
+  indexA=difforder[[1]];
+  indexB=difforder[[2]];
+  unitRotAx=Normalize[\[CapitalDelta]Vectors[[indexA]]\[Cross]\[CapitalDelta]Vectors[[indexB]]];
+  scaledRotAx=Dot[m[[indexA]],unitRotAx]*unitRotAx;
   angle=signedAngleBetweenVectors[
-    UnitVector[3,axisIndexA]-projRotAxMax,m[[axisIndexA]]-projRotAxMax,axis
+    UnitVector[3,indexA]-scaledRotAx,m[[indexA]]-scaledRotAx,unitRotAx
   ];
-  Times[Sqrt@Norm@minput,Flatten@{Cos[angle/2],Sin[angle/2]*axis}]//qOut
+  Times[Sqrt@Norm@minput,Flatten@{Cos[angle/2],Sin[angle/2]*unitRotAx}]//qOut
 ]
 
 
@@ -944,8 +944,7 @@ qBasicFromM[m_]:=Module[
 
 
 signedAngleBetweenVectors[startV_,endV_,axis_]:=Module[
-  {sign,sinvalue,cosvalue,angle},
-  sign[x_]:=Sign[x] /. 0->1;
+  {sinvalue,cosvalue,angle},
   sinvalue=Cross[Normalize@startV,Normalize@endV]//Norm;
   cosvalue=Dot[Normalize@startV,Normalize@endV];
   angle=Which[
@@ -953,7 +952,7 @@ signedAngleBetweenVectors[startV_,endV_,axis_]:=Module[
     Abs@cosvalue<sinvalue,ArcCos@cosvalue,
     True,\[Pi]-ArcSin@sinvalue
   ];
-  sign@Dot[Cross[startV,endV],axis]*angle
+  Replace[Sign@Dot[Cross[startV,endV],axis],0->1]*angle
 ]
 
 
