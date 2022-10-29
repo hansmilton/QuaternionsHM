@@ -815,13 +815,13 @@ mBasicFromQ[q:quat[q0_,q1_,q2_,q3_]]:=Module[
 
 qFromNumberM[minput_]:=
 Module[
-  {m,\[CapitalDelta]Vectors,difforder,indexA,indexB,unitRotAx,scaledRotAx,angle},
+  {m,diffvects,changeorder,indexA,indexB,unitRotAx,scaledRotAx,angle},
   m=Orthogonalize@minput;
-  \[CapitalDelta]Vectors=m-IdentityMatrix@3;
-  difforder=Ordering@N@Diagonal@m;
-  indexA=difforder[[1]];
-  indexB=difforder[[2]];
-  unitRotAx=Normalize[\[CapitalDelta]Vectors[[indexA]]\[Cross]\[CapitalDelta]Vectors[[indexB]]];
+  diffvects=m-IdentityMatrix@3;
+  changeorder=Ordering@N@Diagonal@m;
+  indexA=changeorder[[1]];
+  indexB=changeorder[[2]];
+  unitRotAx=Normalize[diffvects[[indexA]]\[Cross]diffvects[[indexB]]];
   scaledRotAx=Dot[m[[indexA]],unitRotAx]*unitRotAx;
   angle=signedAngleBetweenVectors[
     UnitVector[3,indexA]-scaledRotAx,m[[indexA]]-scaledRotAx,unitRotAx
