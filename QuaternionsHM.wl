@@ -832,14 +832,14 @@ Module[
 
 qFromNumeric180\[Degree]M[minput_]:=
 Module[
-  {m,\[CapitalDelta]Vectors,difforder,axisIndexA,axisIndexB,axis},
+  {m,diffvects,changeorder,indexA,indexB,rotAxis},
   m=Orthogonalize@minput;
-  \[CapitalDelta]Vectors=m-IdentityMatrix@3;
-  difforder=Ordering@N@Diagonal@m;
-  axisIndexA=First@difforder;
-  axisIndexB=difforder[[2]];
-  axis=Normalize[\[CapitalDelta]Vectors[[axisIndexA]]\[Cross]\[CapitalDelta]Vectors[[axisIndexB]]];
-  Times[Sqrt@Norm@minput,Flatten@{0,axis}]//qOut
+  diffvects=m-IdentityMatrix@3;
+  changeorder=Ordering@N@Diagonal@m;
+  indexA=changeorder[[1]];
+  indexB=changeorder[[2]];
+  rotAxis=Normalize[diffvects[[indexA]]\[Cross]diffvects[[indexB]]];
+  Times[Sqrt@Norm@minput,Flatten@{0,rotAxis}]//qOut
 ]
 
 
