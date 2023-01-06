@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[      6254,        171]
+NotebookDataLength[      6274,        171]
 NotebookOptionsPosition[      5793,        153]
-NotebookOutlinePosition[      6242,        171]
-CellTagsIndexPosition[      6199,        168]
+NotebookOutlinePosition[      6262,        171]
+CellTagsIndexPosition[      6219,        168]
 WindowTitle->Quaternions Palette
 WindowFrame->Palette*)
 
@@ -149,15 +149,15 @@ FontSlant->\"Italic\"]\)"}], Background -> LightBlue, BaseStyle -> 14],
  ShowStringCharacters->False,
  FontFamily:>CurrentValue["PanelFontFamily"],
  FontSize:>CurrentValue[
-  "PanelFontSize"],ExpressionUUID->"6f0715bd-b673-49ff-8d05-211c4a1a460c"]
+  "PanelFontSize"],ExpressionUUID->"d93fb820-2660-4f83-9384-abe2ea4bf332"]
 },
 WindowSize->All,
 WindowMargins->{{Automatic, 0}, {Automatic, 0}},
-WindowElements->{},
+WindowElements->{"MagnificationPopUp"},
 WindowTitle->"Quaternions Palette",
 FrontEndVersion->"12.2 for Microsoft Windows (64-bit) (December 12, 2020)",
 StyleDefinitions->"Palette.nb",
-ExpressionUUID->"37a76c8f-0f9e-400c-8ea5-5e4836fd1113"
+ExpressionUUID->"560d49fa-ba3a-4b59-acac-ed2ab7b28648"
 ]
 (* End of Notebook Content *)
 
@@ -170,7 +170,7 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[592, 21, 5197, 130, 116, InheritFromParent,ExpressionUUID->"6f0715bd-b673-49ff-8d05-211c4a1a460c",
+Cell[592, 21, 5197, 130, 125, InheritFromParent,ExpressionUUID->"d93fb820-2660-4f83-9384-abe2ea4bf332",
  PageBreakAbove->True,
  PageBreakWithin->False]
 }
