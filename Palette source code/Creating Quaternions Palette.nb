@@ -10,27 +10,27 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[      7901,        184]
-NotebookOptionsPosition[      7515,        169]
-NotebookOutlinePosition[      7947,        186]
-CellTagsIndexPosition[      7904,        183]
+NotebookDataLength[      8083,        188]
+NotebookOptionsPosition[      7669,        172]
+NotebookOutlinePosition[      8102,        189]
+CellTagsIndexPosition[      8059,        186]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
 Cell[BoxData[
- RowBox[{"NotebookSave", "[", "\n", "\t", 
+ RowBox[{"NotebookSave", "[", "\n", "  ", 
   RowBox[{
-   RowBox[{"CreatePalette", "[", "\n", "\t\t", 
+   RowBox[{"CreatePalette", "[", "\n", "    ", 
     RowBox[{
      RowBox[{"Grid", "[", 
-      RowBox[{"{", "\n", "\t\t\t", 
+      RowBox[{"{", "\n", "      ", 
        RowBox[{
         RowBox[{"{", 
          RowBox[{
           RowBox[{"Spacer", "@", "2"}], ",", "SpanFromLeft", ",", 
-          "SpanFromLeft"}], "}"}], ",", "\n", "\t\t\t", 
-        RowBox[{"{", "\n", "\t\t\t\t", 
+          "SpanFromLeft"}], "}"}], ",", "\n", "      ", 
+        RowBox[{"{", "\n", "        ", 
          RowBox[{
           RowBox[{"PasteButton", "[", 
            RowBox[{
@@ -40,7 +40,7 @@ Cell[BoxData[
             RowBox[{"quat", "[", 
              RowBox[{
              "\[Placeholder]", ",", "\[Placeholder]", ",", "\[Placeholder]", 
-              ",", "\[Placeholder]"}], "]"}]}], "]"}], ",", "\n", "\t\t\t\t", 
+              ",", "\[Placeholder]"}], "]"}]}], "]"}], ",", "\n", "        ", 
           RowBox[{"PasteButton", "[", 
            RowBox[{
             RowBox[{"Tooltip", "[", 
@@ -48,7 +48,7 @@ Cell[BoxData[
              "\"\<Q\[Cross]Q\>\"", ",", 
               "\"\<Multiplication of quaternions\>\""}], "]"}], ",", 
             RowBox[{"\[SelectionPlaceholder]", "**", "\[Placeholder]"}]}], 
-           "]"}], ",", "\n", "\t\t\t\t", 
+           "]"}], ",", "\n", "        ", 
           RowBox[{"PasteButton", "[", 
            RowBox[{
             RowBox[{"Tooltip", "[", 
@@ -58,9 +58,9 @@ Cell[BoxData[
             RowBox[{"(", 
              RowBox[{"Power", "[", 
               RowBox[{"\[SelectionPlaceholder]", ",", 
-               RowBox[{"-", "1"}]}], "]"}], ")"}]}], "]"}]}], "\n", "\t\t\t", 
-         "}"}], ",", "\n", "\t\t\t", 
-        RowBox[{"{", "\n", "\t\t\t\t", 
+               RowBox[{"-", "1"}]}], "]"}], ")"}]}], "]"}]}], "\n", "      ", 
+         "}"}], ",", "\n", "      ", 
+        RowBox[{"{", "\n", "        ", 
          RowBox[{
           RowBox[{"PasteButton", "[", 
            RowBox[{
@@ -69,7 +69,7 @@ Cell[BoxData[
              "\"\<Q\[LeftRightArrow]{}\>\"", ",", 
               "\"\<Quaternion \[LeftRightArrow] List\>\""}], "]"}], ",", 
             RowBox[{"quatToFromList", "[", "\[SelectionPlaceholder]", "]"}]}],
-            "]"}], ",", "\n", "\t\t\t\t", 
+            "]"}], ",", "\n", "        ", 
           RowBox[{"PasteButton", "[", 
            RowBox[{
             RowBox[{"Tooltip", "[", 
@@ -78,7 +78,7 @@ Cell[BoxData[
               "\"\<Quaternion \[LeftRightArrow] Angle/Axis\>\""}], "]"}], ",", 
             RowBox[{
             "quatToFrom\[Theta]V", "[", "\[SelectionPlaceholder]", "]"}]}], 
-           "]"}], ",", "\n", "\t\t\t\t", 
+           "]"}], ",", "\n", "        ", 
           RowBox[{"PasteButton", "[", 
            RowBox[{
             RowBox[{"Tooltip", "[", 
@@ -87,8 +87,8 @@ Cell[BoxData[
               "\"\<Quaternion \[LeftRightArrow] Matrix\>\""}], "]"}], ",", 
             RowBox[{
             "quatToFromMatrix", "[", "\[SelectionPlaceholder]", "]"}]}], 
-           "]"}]}], "\n", "\t\t\t", "}"}], ",", "\n", "\t\t\t", 
-        RowBox[{"{", "\n", "\t\t\t\t", 
+           "]"}]}], "\n", "      ", "}"}], ",", "\n", "      ", 
+        RowBox[{"{", "\n", "        ", 
          RowBox[{
           RowBox[{"PasteButton", "[", 
            RowBox[{
@@ -98,7 +98,7 @@ Cell[BoxData[
               "\"\<Quaternion rotation of a vector\>\""}], "]"}], ",", 
             RowBox[{"quatRotateVector", "[", 
              RowBox[{"\[SelectionPlaceholder]", ",", "\[Placeholder]"}], 
-             "]"}]}], "]"}], ",", "\n", "\t\t\t\t", 
+             "]"}]}], "]"}], ",", "\n", "        ", 
           RowBox[{"PasteButton", "[", 
            RowBox[{
             RowBox[{"Tooltip", "[", 
@@ -108,7 +108,7 @@ Cell[BoxData[
              "]"}], ",", 
             RowBox[{
             "quatToFromEulerZYX", "[", "\[SelectionPlaceholder]", "]"}]}], 
-           "]"}], ",", "\n", "\t\t\t\t", 
+           "]"}], ",", "\n", "        ", 
           RowBox[{"PasteButton", "[", 
            RowBox[{
             RowBox[{"Tooltip", "[", 
@@ -117,57 +117,60 @@ Cell[BoxData[
               "\"\<Quaternion from interactive spec of matrix\>\""}], "]"}], 
             ",", 
             RowBox[{"quatFromAlignedMatrix", "[", "]"}]}], "]"}]}], "\n", 
-         "\t\t\t", "}"}], ",", "\n", "\t\t\t", 
-        RowBox[{"{", "\n", "\t\t\t\t", 
+         "      ", "}"}], ",", "\n", "      ", 
+        RowBox[{"{", "\n", "        ", 
          RowBox[{
-          RowBox[{"Button", "[", "\n", "\t\t\t\t\t", 
-           RowBox[{"\"\<Inbuilt functions info\>\"", ",", "\n", "\t\t\t\t\t", 
-            RowBox[{"CreatePalette", "[", "\n", "\t\t\t\t\t\t", 
+          RowBox[{"Button", "[", "\n", "          ", 
+           RowBox[{"\"\<Inbuilt functions info\>\"", ",", "\n", "          ", 
+            RowBox[{"CreatePalette", "[", "\n", "            ", 
              RowBox[{
-              RowBox[{"Panel", "[", "\n", "\t\t\t\t\t\t\t", 
+              RowBox[{"Panel", "[", "\n", "              ", 
                RowBox[{
                 RowBox[{"Column", "[", 
-                 RowBox[{"{", "\n", "\t\t\t\t\t\t\t\t", 
+                 RowBox[{"{", "\n", "                ", 
                   RowBox[{
                   "\"\<Inbuilt functions that can take \
 \!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\) as argument:\>\"", ",", "\n",
-                    "\t\t\t\t\t\t\t\t", 
+                    "                ", 
                    "\"\<- Non commutative multiplication, \
 \!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)**\!\(\*StyleBox[\"quat\",\
-FontSlant->\"Italic\"]\).\>\"", ",", "\n", "\t\t\t\t\t\t\t\t", 
+FontSlant->\"Italic\"]\).\>\"", ",", "\n", "                ", 
                    "\"\<- Power, \
 \!\(\*SuperscriptBox[StyleBox[\"quat\",FontSlant->\"Italic\"], \
 StyleBox[\"p\",FontSlant->\"Italic\"]]\). The exponent \
 \!\(\*StyleBox[\"p\",FontSlant->\"Italic\"]\) has to be a scalar.\>\"", ",", 
-                   "\n", "\t\t\t\t\t\t\t\t", "\"\<- Conjugate\>\"", ",", "\n",
-                    "\t\t\t\t\t\t\t\t", "\"\<- Norm\>\"", ",", "\n", 
-                   "\t\t\t\t\t\t\t\t", "\"\<- Normalize\>\"", ",", "\n", 
-                   "\t\t\t\t\t\t\t\t", "\"\<- Exp\>\"", ",", "\n", 
-                   "\t\t\t\t\t\t\t\t", "\"\<- Log\>\"", ",", "\n", 
-                   "\t\t\t\t\t\t\t\t", 
+                   "\n", "                ", "\"\<- Conjugate\>\"", ",", "\n",
+                    "                ", "\"\<- Norm\>\"", ",", "\n", 
+                   "                ", "\"\<- Normalize\>\"", ",", "\n", 
+                   "                ", "\"\<- Exp\>\"", ",", "\n", 
+                   "                ", "\"\<- Log\>\"", ",", "\n", 
+                   "                ", 
                    "\"\<- Times, \
 scalar*\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)\>\"", ",", "\n", 
-                   "\t\t\t\t\t\t\t\t", 
+                   "                ", 
                    "\"\<- Plus, \
 scalar+\!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\) and \
 \!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)+\!\(\*StyleBox[\"quat\",\
-FontSlant->\"Italic\"]\)\>\""}], "\n", "\t\t\t\t\t\t\t", "}"}], "]"}], ",", 
-                "\n", "\t\t\t\t\t\t\t", 
+FontSlant->\"Italic\"]\)\>\""}], "\n", "              ", "}"}], "]"}], ",", 
+                "\n", "              ", 
                 RowBox[{"Background", "\[Rule]", "LightBlue"}], ",", 
                 RowBox[{"BaseStyle", "\[Rule]", "14"}]}], "\n", 
-               "\t\t\t\t\t\t", "]"}], ",", "\n", "\t\t\t\t\t\t", 
+               "            ", "]"}], ",", "\n", "            ", 
               RowBox[{"WindowTitle", "\[Rule]", "None"}], ",", 
               RowBox[{"WindowMargins", "\[Rule]", "Automatic"}], ",", 
-              RowBox[{"Saveable", "\[Rule]", "False"}]}], "\n", "\t\t\t\t\t", 
-             "]"}]}], "\n", "\t\t\t\t", "]"}], ",", "\n", "\t\t\t\t", 
-          "SpanFromLeft", ",", "SpanFromLeft"}], "\n", "\t\t\t", "}"}]}], 
-       "\n", "\t\t", "}"}], "]"}], ",", "\n", "\t\t", 
-     RowBox[{"WindowTitle", "\[Rule]", "\"\<Quaternions Palette\>\""}]}], 
-    "\n", "\t", "]"}], ",", "\n", "\t", 
-   RowBox[{"Interactive", "\[Rule]", "True"}]}], "\n", "]"}]], "Input",Express\
-ionUUID->"bd1de4a7-430d-430f-a59e-87132e5b3c8e"]
+              RowBox[{"Saveable", "\[Rule]", "False"}]}], "\n", "          ", 
+             "]"}]}], "\n", "        ", "]"}], ",", "\n", "        ", 
+          "SpanFromLeft", ",", "SpanFromLeft"}], "\n", "      ", "}"}]}], 
+       "\n", "    ", "}"}], "]"}], ",", "\n", "    ", 
+     RowBox[{"WindowTitle", "\[Rule]", "\"\<Quaternions Palette\>\""}], ",", 
+     RowBox[{"WindowElements", "\[Rule]", 
+      RowBox[{"{", "\"\<MagnificationPopUp\>\"", "}"}]}]}], "\n", "  ", "]"}],
+    ",", "\n", "  ", 
+   RowBox[{"Interactive", "\[Rule]", "True"}]}], "\n", "]"}]], "Code",
+ InitializationCell->False,
+ CellLabel->"In[1]:=",ExpressionUUID->"bd1de4a7-430d-430f-a59e-87132e5b3c8e"]
 },
-WindowSize->{916, 833},
+WindowSize->{1139, 833},
 WindowMargins->{{140, Automatic}, {Automatic, 34}},
 TrackCellChangeTimes->False,
 FrontEndVersion->"12.2 for Microsoft Windows (64-bit) (December 12, 2020)",
@@ -185,7 +188,8 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[558, 20, 6953, 147, 962, "Input",ExpressionUUID->"bd1de4a7-430d-430f-a59e-87132e5b3c8e"]
+Cell[558, 20, 7107, 150, 972, "Code",ExpressionUUID->"bd1de4a7-430d-430f-a59e-87132e5b3c8e",
+ InitializationCell->False]
 }
 ]
 *)
