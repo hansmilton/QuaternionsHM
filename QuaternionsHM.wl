@@ -269,7 +269,7 @@ Module[
 
 
 quat/:Power[base_quat?quatQ,-1]/;Nor[Norm@base===0,Norm@base===0.]:=
-  Conjugate[base]/Norm[base]^2/.sqAbsRule
+  Conjugate[base]/Norm[base]^2/.sqAbsRule//roundNumbers
 quat/:Power[base_quat?quatQ,exponent_?scalarQ]/;Nor[Norm@base===0,Norm@base===0.]:=
   Exp[exponent*Log@base]
 
@@ -375,7 +375,7 @@ quatToFromEulerZYX[PatternSequence[\[Alpha]_?NumericQ,\[Beta]_?NumericQ,\[Gamma]
   quatToFrom\[Theta]V[N@\[Alpha] \[Degree],{0,0,1}]**quatToFrom\[Theta]V[N@\[Beta] \[Degree],{0,1,0}]**quatToFrom\[Theta]V[N@\[Gamma] \[Degree],{1,0,0}]
 
 
-quatFromAlignedMatrix[]:=N@quatToFromMatrix[alignedMatrixDialogs[]]/.{0.->0,1.->1}
+quatFromAlignedMatrix[]:=N@quatToFromMatrix[alignedMatrixDialogs[]]/.{0.->0,1.->1,-1.->1}
 
 
 (* ::Subsection::Closed:: *)
