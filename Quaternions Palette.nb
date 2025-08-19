@@ -3,17 +3,17 @@
 (*** Wolfram Notebook File ***)
 (* http://www.wolfram.com/nb *)
 
-(* CreatedBy='Mathematica 12.2' *)
+(* CreatedBy='Wolfram 14.3' *)
 
 (*CacheID: 234*)
 (* Internal cache information:
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
-NotebookDataPosition[       158,          7]
-NotebookDataLength[      6274,        171]
-NotebookOptionsPosition[      5793,        153]
-NotebookOutlinePosition[      6262,        171]
-CellTagsIndexPosition[      6219,        168]
+NotebookDataPosition[       154,          7]
+NotebookDataLength[      6353,        173]
+NotebookOptionsPosition[      5843,        155]
+NotebookOutlinePosition[      6338,        173]
+CellTagsIndexPosition[      6295,        170]
 WindowTitle->Quaternions Palette
 WindowFrame->Palette*)
 
@@ -121,6 +121,7 @@ Cell[BoxData[
            "- Non commutative multiplication, \
 \!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)**\!\(\*StyleBox[\"quat\",\
 FontSlant->\"Italic\"]\).", 
+           
            "- Power, \
 \!\(\*SuperscriptBox[StyleBox[\"quat\",FontSlant->\"Italic\"], \
 StyleBox[\"p\",FontSlant->\"Italic\"]]\). The exponent \
@@ -132,7 +133,8 @@ and \!\(\*StyleBox[\"quat\",FontSlant->\"Italic\"]\)+\!\(\*StyleBox[\"quat\",\
 FontSlant->\"Italic\"]\)"}], Background -> LightBlue, BaseStyle -> 14], 
         WindowTitle -> None, WindowMargins -> Automatic, Saveable -> False],
       Evaluator->Automatic,
-      Method->"Preemptive"], "\[SpanFromLeft]", "\[SpanFromLeft]"}
+      Method->"Preemptive"], "\[SpanFromLeft]", "\[SpanFromLeft]"},
+    {"\<\"\"\>", "\<\"\"\>", "\<\"\"\>"}
    },
    AutoDelete->False,
    GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
@@ -149,15 +151,15 @@ FontSlant->\"Italic\"]\)"}], Background -> LightBlue, BaseStyle -> 14],
  ShowStringCharacters->False,
  FontFamily:>CurrentValue["PanelFontFamily"],
  FontSize:>CurrentValue[
-  "PanelFontSize"],ExpressionUUID->"d93fb820-2660-4f83-9384-abe2ea4bf332"]
+  "PanelFontSize"],ExpressionUUID->"5a1c31b1-305b-a240-a31a-25a8d0912c2f"]
 },
 WindowSize->All,
-WindowMargins->{{Automatic, 0}, {Automatic, 0}},
-WindowElements->{"MagnificationPopUp"},
+WindowMargins->{{Automatic, 0.6000000000001364}, {Automatic, 0}},
+WindowElements->{"StatusArea", "MagnificationPopUp"},
 WindowTitle->"Quaternions Palette",
-FrontEndVersion->"12.2 for Microsoft Windows (64-bit) (December 12, 2020)",
+FrontEndVersion->"14.3 for Microsoft Windows (64-bit) (July 8, 2025)",
 StyleDefinitions->"Palette.nb",
-ExpressionUUID->"560d49fa-ba3a-4b59-acac-ed2ab7b28648"
+ExpressionUUID->"e4311d57-0d55-7844-ba3a-d62abcbd57a8"
 ]
 (* End of Notebook Content *)
 
@@ -170,7 +172,7 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[592, 21, 5197, 130, 125, InheritFromParent,ExpressionUUID->"d93fb820-2660-4f83-9384-abe2ea4bf332",
+Cell[588, 21, 5251, 132, 91, InheritFromParent,ExpressionUUID->"5a1c31b1-305b-a240-a31a-25a8d0912c2f",
  PageBreakAbove->True,
  PageBreakWithin->False]
 }
