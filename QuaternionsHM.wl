@@ -285,7 +285,7 @@ quat/:Normalize[q_quat?quatQ]:=Normalize[List@@q]//qOut
 
 quat/:Exp[q_quat?quatQ]:=With[
   {q0=First@q,qV=Rest[List@@q]},
-  E^q0 {Cos[Norm@qV],Normalize[qV] Sin[Norm@qV]}/.sqAbsRule//Flatten//qOut
+  E^q0 {Cos[Norm@qV],Normalize[qV] Sin[Norm@qV]}/.sqAbsRule//Flatten
 ]
 
 
