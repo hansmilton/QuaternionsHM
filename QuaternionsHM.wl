@@ -109,6 +109,8 @@
 (* ::Text:: *)
 (*v2.2, May 2022. Mathematica 12.2.*)
 (*General overhaul.*)
+(**)
+(*After May 2022 several maintenance updates*)
 
 
 (* ::Section::Closed:: *)
@@ -245,6 +247,9 @@ Matrices that can be selected represent a rotated coordinate frame where all axe
 are colinear with axes of the reference frame. Matrix elements from the set {-1,0,1}.
 
 quatFromAlignedMatrix[ ]. No arguments. Returns quaternion.";
+
+
+quatVersionDate::usage="Date of last update";
 
 
 (* ::Section::Closed:: *)
@@ -683,71 +688,79 @@ isMatrixWithEmptyAxes[mIn_]:=Module[
 
 
 isAlignedMatrix[m_]:=And[
-  Count[Flatten@m,Except[0|0.]]==3,
-  SameQ@@Abs@Cases[Flatten@m,Except[0|0.]],
-  Count[Flatten@m,e_/;!NumericQ[e]]==3
+  Count[m,0|0.,{2}]==6,
+  Count[m,_Symbol,{-1}]==3,
+  SameQ@@Abs@Cases[m,Except[0|0.],{2}]
 ]
 
 
-isLHAlignedMatrix[m_]:=Module[
-  {am,lh=False},
-  am=isAlignedMatrix[m];
-  If[am,
-    lh=Switch[Count[Diagonal@m,Except[0|0.]],
-      0|3,lh=Replace[Times@@Cases[Flatten@m,Except[0|0.]]//First//Negative,Negative[_]->False],
-      1,lh=Replace[Times@@Cases[Flatten@m,Except[0|0.]]//First//Positive,Positive[_]->True],
-      _,True
-    ];
-    If[lh,Print@Framed["Lefthanded aligned matrix",FrameStyle->Red]]
-  ];
-  am&&lh
+isLHAlignedMatrix[m_]:=With[
+  {res=And[isAlignedMatrix[m],Det[Replace[m,_Symbol->1,{-1}]]<1]},
+  If[res,Print@Framed["Lefthanded aligned matrix",FrameStyle->Red]];
+  res
 ]
 
 
 isMatrixType33[m_]:=And[
   isAlignedMatrix[m],
-  Count[Diagonal@m,Except[0|0.]]==3,
-  Replace[Times@@Diagonal[m]//First//Positive,Positive[_]->True],
-  SameQ@@Diagonal[m]
+  Count[Diagonal[m],Except[0|0.]]==3,
+  Count[Map[FreeQ[#,_?Negative]&,Diagonal@m],True]==3
 ]
 
 
 isMatrixType34[m_]:=And[
   isAlignedMatrix[m],
-  Count[Diagonal@m,Except[0|0.]]==1,
-  UnsameQ@@Cases[Flatten@ReplacePart[m,{i_,i_}->0],Except[0|0.]],
-  Replace[Times@@Cases[Flatten@m,Except[0|0.]]//First//Negative,Negative[_]->False]
+  Count[Diagonal@m,0|0.]==2,
+  FreeQ[FirstCase[Diagonal@m,Except[0|0.]],_?Negative],
+  UnsameQ@@Cases[ReplacePart[m,{i_,i_}->Nothing],Except[0|0.],{2}]
 ]
 
 
 isMatrixType35[m_]:=And[
   isAlignedMatrix[m],
   Count[Diagonal@m,0|0.]==3,
-  Replace[Times@@Cases[Flatten@m,Except[0|0.]]//First//Positive,Positive[_]->True]
+  Count[Map[FreeQ[#,_?Negative]&,Cases[m,Except[0|0.],{2}]],True]//MatchQ[1|3]
 ]
 
 
 isMatrixType36[m_]:=And[
   isAlignedMatrix[m],
   Count[Diagonal@m,Except[0|0.]]==3,
-  Replace[Times@@Diagonal[m]//First//Positive,Positive[_]->True],
-  !SameQ@@Diagonal[m]
+  Count[Map[FreeQ[#,_?Negative]&,Diagonal@m],True]==1
 ]
 
 
 isMatrixType37[m_]:=And[
   isAlignedMatrix[m],
-  Count[Diagonal@m,Except[0|0.]]==1,
-  SameQ@@Cases[Flatten@ReplacePart[m,{i_,i_}->0],Except[0|0.]],
-  Replace[Times@@Cases[Flatten@m,Except[0|0.]]//First//Negative,Negative[_]->False]
+  Count[Diagonal@m,0|0.]==2,
+  !FreeQ[FirstCase[Diagonal@m,Except[0|0.]],_?Negative],
+  SameQ@@Cases[ReplacePart[m,{i_,i_}->Nothing],Except[0|0.],{2}]
 ]
 
 
-isMatrixType38[m_]:=And[
-  is180\[Degree]Matrix[m],
-  MatchQ[Diagonal@m,{Repeated[x_^2-y_^2|-x_^2+y_^2|-x_^2-y_^2]}],
-  UnsameQ@@Diagonal[m],
-  MatchQ[Cases[ReplacePart[m,{i_,i_}->Nothing],Except[0|0.],{2}],{2*x_*y_,2*x_*y_}|{-2*x_*y_,-2*x_*y_}]
+isMatrixType38[m_]:=With[
+  {mx=Expand@m,diags={s_Symbol^2-t_Symbol^2,-s_Symbol^2+t_Symbol^2,-s_Symbol^2-t_Symbol^2}},
+  And[
+    is180\[Degree]Matrix[m],
+    Count[m,0|0.,{2}]==4,
+    Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==2,
+    Or[
+      MatchQ[Diagonal@m,Alternatives@@Permutations@diags],
+      MatchQ[Replace[Diagonal@mx,{n_?Positive->1,n_?Negative->-1},{3}],Alternatives@@Permutations@diags]
+    ],
+    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],Cases[Diagonal@mx,_?NumberQ,{3}]//Abs//Apply[SameQ],True],
+    MatchQ[
+      Extract[
+        m,
+        Complement[{1,2,3},FirstPosition[Map[Count[#,_?Negative,Infinity]&,Diagonal@mx],2]]
+      ],
+      (-2|2)*s_Symbol*t_Symbol|_?NumberQ*s_Symbol*t_Symbol
+    ],
+    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],
+      2*Abs@FirstCase[Diagonal@mx,_?NumberQ,"",{3}]==Abs@First@Cases[ReplacePart[m,{i_,i_}->Nothing],_?NumberQ,{3}],
+      True
+    ]
+  ]
 ]
 
 
@@ -755,33 +768,47 @@ isInvalidSymbolicMatrix[m_]:=Module[
   {chkA,chkB=False},
   chkA=Nand[DuplicateFreeQ@m,DuplicateFreeQ@Transpose@m];
   If[!chkA&&MatchQ[m,ConstantArray[_Symbol,{3,3}]],
-    chkB=!OrderedQ[Diagonal@m,OrderedQ[{#1,#2}]&&UnsameQ[#1,#2]&]
+    chkB=!OrderedQ[Diagonal@m,Order[#1,#2]&]
   ];
-  If[chkA,Print@Framed["Matrix with duplicated rows or columns",FrameStyle->Red]];
+  If[chkA,Print@Framed["Matrix has duplicated rows or columns",FrameStyle->Red]];
   If[chkB,Print@Framed["Symbols in matrix diagonal are not in order",FrameStyle->Red]];
   Or[chkA,chkB]
 ]
 
 
 isMatrixType40[m_]:=With[
-  {
-  diaA=q0_Symbol^2+q1_Symbol^2-q2_Symbol^2-q3_Symbol^2,
-  diaB=q0_Symbol^2-q1_Symbol^2+q2_Symbol^2-q3_Symbol^2,
-  diaC=q0_Symbol^2-q1_Symbol^2-q2_Symbol^2+q3_Symbol^2
-  },
-  MatchQ[Diagonal@m,{diaA,diaB,diaC}]
+  {offdiags=ReplacePart[m,{i_,i_}->Nothing]//Expand//Flatten},
+  And[
+    Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==4,
+    MatchQ[Diagonal[m],Map[MapAt[Minus,a_Symbol^2-b_Symbol^2-c_Symbol^2-d_Symbol^2,#]&,{2,3,4}]],
+    DuplicateFreeQ[offdiags],
+    And@@Map[MatchQ[#,(-2|2)*p_Symbol*q_Symbol+(-2|2)*r_Symbol*s_Symbol]&,offdiags],
+    And@@Map[DuplicateFreeQ[Cases[#,_Symbol,Infinity]]&,offdiags],
+    Count[offdiags,Times[2,p_,q_]+Times[-2,r_,s_]]==3
+  ]
 ]
 
 
 isMatrixType48[m_]:=With[
-  {eA=(-2|2)*x_*y_,eB=eA=(-2|2)*x_*z_,eC=eA=(-2|2)*y_*z_},
+  {
+    mx=Expand@m,
+    diag=Map[MapAt[Minus,-x_Symbol^2-y_Symbol^2-z_Symbol^2,#]&,{1,2,3}],
+    offdiag={x_Symbol*y_Symbol,x_Symbol*z_Symbol,y_Symbol*z_Symbol}
+  },
   And[
     is180\[Degree]Matrix[m],
-    MatchQ[Diagonal@m,{Repeated[x_^2-y_^2-z_^2|-x_^2+y_^2-z_^2|-x_^2-y_^2+z_^2]}],
-    UnsameQ@@Diagonal[m],
-    MatchQ[ReplacePart[m,{i_,i_}->Nothing],{Repeated[{eA|eB|eC,eA|eB|eC}]}],
-    UnsameQ@@ReplacePart[m,{i_,i_}->Nothing],
-    And@@UnsameQ@@@ReplacePart[m,{i_,i_}->Nothing]
+    Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==3,
+    Or[
+      MatchQ[Diagonal@m,diag],
+      MatchQ[Replace[Diagonal@mx,{n_?Positive->1,n_?Negative->-1},{3}],diag]
+    ],
+    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],Cases[Diagonal@mx,_?NumberQ,{3}]//Abs//Apply[SameQ],True],
+    MatchQ[{m[[1,2]],m[[1,3]],m[[2,3]]},(-2|2)*offdiag|_?NumberQ*offdiag],
+    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],
+      2*Abs@FirstCase[Diagonal@mx,_?NumberQ,"",{3}]==Abs@First@Cases[ReplacePart[m,{i_,i_}->Nothing],_?NumberQ,{3}],
+      True
+    ],
+    Count[{m[[1,2]],m[[1,3]],m[[2,3]]},_?Negative,{2}]//MatchQ[0|2]
   ]
 ]
 
@@ -858,7 +885,7 @@ qFromNumericM[m_]:=Module[
 
 qFromSymbolicM[m_]:=Module[
   {q0,q1,q2,q3},
-  If[is180\[Degree]Matrix[m],Print@Framed["Cannot convert matrix to quat",FrameStyle->Red];Return@m];
+  If[is180\[Degree]Matrix[m],Print@Framed["No quat matches this matrix",FrameStyle->Red];Return@m];
   q0=Sqrt[m[[1,1]]+m[[2,2]]+m[[3,3]]+1]/2;
   q1=(m[[2,3]]-m[[3,2]])/(4 q0);
   q2=(m[[3,1]]-m[[1,3]])/(4 q0);
@@ -918,18 +945,33 @@ qFrom180\[Degree]AroundPlaneDiagonalM[m_]:=Module[
 
 
 qFrom180\[Degree]AroundAxisInBasePlaneM[m_]:=Module[
-  {axis,sign},
-  axis=PowerExpand[Map[Sqrt,Diagonal@m,{2}]/.-s_Symbol^2:>0];
-  sign=Cases[ReplacePart[m,{i_,i_}->Nothing],Except[0|0.],{2}]//First//First//Sign;
-  Replace[Prepend[axis,0],{head:Repeated[0],e1:Except[0],tail__}:>{head,sign*e1,tail}]//qOut
-]
+  {norm,diag,axis,sign},
+  norm=Switch[FreeQ[Diagonal@m,_?NumberQ,{2}],
+    True,1,
+    False,First@Cases[Expand@Diagonal@m,_?NumberQ,{3}]//Abs
+  ];
+  diag=Switch[norm,
+    1,Diagonal@m,
+    _,Replace[Expand@Diagonal@m,{n_?Positive->1,n_?Negative->-1},{3}]
+  ];
+  axis=PowerExpand[Sqrt[diag]/.-x_Symbol^2->0];
+  sign=FirstCase[ReplacePart[m,{i_,i_}->Nothing],_?NumberQ,"",{3}]//Sign;
+  Prepend[MapAt[sign*#&,Sqrt[norm]*axis,FirstPosition[axis,Except@0,Heads->False]],0]//Apply[quat]]
 
 
 qFrom180\[Degree]AroundAxisOutOfBasePlaneM[m_]:=Module[
-  {axis,signs},
-  axis=PowerExpand[Map[Sqrt,Diagonal@m,{2}]/.-s_Symbol^2:>0];
-  signs=Sign@Map[First,Apply[Times,ReplacePart[m,{i_,i_}->1]]];
-  Prepend[signs*axis,0]//qOut
+  {norm,diag,axis,signs},
+  norm=Switch[FreeQ[Diagonal@m,_?NumberQ,{2}],
+    True,1,
+    False,First@Cases[Expand@Diagonal@m,_?NumberQ,{3}]//Abs
+  ];
+  diag=Switch[norm,
+    1,Diagonal@m,
+    _,Replace[Expand@Diagonal@m,{n_?Positive->1,n_?Negative->-1},{3}]
+  ];
+  axis=PowerExpand[Sqrt[diag]/.-x_Symbol^2->0];
+  signs=Sign[Times@@@Map[Cases[#,_?NumberQ,{2}]&,ReplacePart[m,{i_,i_}->Nothing]]];
+  Prepend[signs*Sqrt[norm]*axis,0]//Apply[quat]
 ]
 
 
@@ -1209,6 +1251,13 @@ roundNumbers[x_]:=ReplaceAll[x,n_?MachineNumberQ:>If[Abs[n-Round@n]<10^-12,Round
 
 
 sqAbsRule:=Abs[s_]^p:2|-2:>s^p
+
+
+(* ::Subsection::Closed:: *)
+(*Version date*)
+
+
+quatVersionDate="2025-10-06";
 
 
 (* ::Section::Closed:: *)
