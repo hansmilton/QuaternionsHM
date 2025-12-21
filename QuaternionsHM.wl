@@ -315,32 +315,25 @@ quat/:Times[NonCommutativeMultiply[p_quat,1],q_quat]:=p**q
 
 
 quatToFromList[q_?quatQ]:=List@@q
-quatToFromList[l_?listQ]:=l//qOut
+quatToFromList[l_?qlistQ]:=l//qOut
 
 
-quatToFrom\[Theta]V[q_?quatQ]/;Norm@Chop@Take[List@@q,-3]===0:={0,{0,0,0}}
-quatToFrom\[Theta]V[q:quat[q0_,__]?quatQ]/;And[NumericQ@q0,symvectQ[Take[q,-3]],Abs[q0]>=1]:=
-  {0,{0,0,0}}
+quatToFrom\[Theta]V[q_?quatQ]/;Norm@Chop@Rest[List@@q]===0:={First[q],{0,0,0}}
 quatToFrom\[Theta]V[q_?quatQ]/;symvectQ[Take[q,-3]]:=
   {2 ArcCos[First@q],Take[List@@q,-3]/Sqrt[1-First[q]^2]}//\[Theta]VOut
 quatToFrom\[Theta]V[q_?quatQ]:=
   {2 ArcCos[First@q/Norm@q],Normalize@Take[List@@q,-3]}//\[Theta]VOut
 
 quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scalarQ,v_?vectQ}]/;Norm@Chop@v===0:=
-  quat[1,0,0,0]
-quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scalarQ,v_?vectQ}]/;symvectQ[v]:=
+  quat[\[Theta],0,0,0]
+quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?symvectQ]|{\[Theta]_?scalarQ,v_?symvectQ}]:=
   {Cos[\[Theta]/2],Sin[\[Theta]/2] v}//Flatten//qOut
 quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scalarQ,v_?vectQ}]:=
   {Cos[\[Theta]/2],Sin[\[Theta]/2] Normalize@v}//Flatten//qOut
 
 
-quatToFromMatrix[q_?quatQ/;qType@q==40]:=mBasicFromQ[q]
-quatToFromMatrix[quat[q0_,q1_,q2_,q3_]?quatQ]:=
-  {
-    {q0^2+q1^2-q2^2-q3^2,2 (q0 q3+q1 q2),2 (q1 q3-q0 q2)},
-    {2 (q1 q2-q0 q3),q0^2-q1^2+q2^2-q3^2,2 (q0 q1+q2 q3)},
-    {2 (q0 q2+q1 q3),2 (q2 q3-q0 q1),q0^2-q1^2-q2^2+q3^2}
-  }//mOut
+quatToFromMatrix[q_?quatQ/;qType@q==40]:=mFromSymbolsOnlyQ[q]
+quatToFromMatrix[q_?quatQ]:=Map[quatRotateVector[q,#]&,IdentityMatrix[3]]//mOut
 
 quatToFromMatrix[m_?matQ]:=Switch[mType@m,
   1,qFromNumberM[m],
@@ -348,21 +341,27 @@ quatToFromMatrix[m_?matQ]:=Switch[mType@m,
   3,qFromSymbolicM[m],
   4,qFromSymbolicM[m],
   21,qFromNumeric180\[Degree]M[m],
-  33,qFromSymbolicIdentityM[m],
-  34,qFrom90\[Degree]AroundBaseAxisM[m],
-  35,qFrom120\[Degree]AroundOctantDiagonalM[m],
-  36,qFrom180\[Degree]AroundBaseAxisM[m],
-  37,qFrom180\[Degree]AroundPlaneDiagonalM[m],
-  38,qFrom180\[Degree]AroundAxisInBasePlaneM[m],
-  40,qBasicFromM[m],
-  48,qFrom180\[Degree]AroundAxisOutOfBasePlaneM[m],
+  30,qFromSymbolicAngleRotAroundBaseAxisM[m],
+  31,qFromSymbolicIdentityM[m],
+  32,qFrom90\[Degree]AroundBaseAxisSymbolicM[m],
+  33,qFrom120\[Degree]AroundOctantDiagonalSymbolicM[m],
+  34,qFrom180\[Degree]AroundBaseAxisSymbolicM[m],
+  35,qFrom180\[Degree]AroundPlaneDiagonalSymbolicM[m],
+  36,qFrom180\[Degree]AroundAxisInBasePlaneSymbolicM[m],
+  38,qFromEuler2SymbolicAnglesM[m],
+  41,qFromSymbolsOnlyM[m],
+  45,qFrom180\[Degree]AroundAxisOutOfBasePlaneSymbolicM[m],
+  46,qFromSymbolicMRotationInBasePlane[m],
+  47,qFromSymbolicMRotationOutOfBasePlanes[m],
+  48,qFromEuler3SymbolicAnglesDistinctAxesM[m],
+  49,qFromEuler3SymbolicAnglesRepeatedAxisM[m],
   _,m
 ]
 
 
 quatRotateVector[quat[q0_,q1_,q2_,q3_]?quatQ,v_?vectQ]:=With[
   {qV={q1,q2,q3}},
-  (q0^2-q1^2-q2^2-q3^2)*v+2*Dot[qV,v]*qV+2*q0*Cross[qV,v]//vOut
+  (q0^2-q1^2-q2^2-q3^2)*v+2*Dot[qV,v]*qV+2*q0*Cross[qV,v]//roundNumbers
 ]
 
 
@@ -391,22 +390,25 @@ quatFromAlignedMatrix[]:=N@quatToFromMatrix[alignedMatrixDialogs[]]/.{0.->0,1.->
 (*Checking arguments to public functions*)
 
 
-scalarQ[e_]:=And[FreeQ[e,Complex],ReplaceAll[e,s_Symbol/;!Context@s==="System`":>RandomReal[]]//NumericQ]
+scalarQ[e_]:=And[FreeQ[e,Complex],ReplaceAll[e,s_Symbol/;Context@s=!="System`":>RandomReal[]]//NumericQ]
 
 
-listQ[l_]:=And[Head@l===List,scalarQ[#]&/@l==={True,True,True,True}]
+qlistQ[l_]:=VectorQ[l,scalarQ]&&Length[l]==4
 
 
-vectQ[v_]:=And[Head@v===List,scalarQ[#]&/@v==={True,True,True}]
+vectQ[v_]:=VectorQ[v,scalarQ]&&Length[v]==3
 
 
-quatQ[q_]:=And[Head@q===quat,scalarQ[#]&/@q===quat[True,True,True,True]]
+quatQ[q_]:=MatchQ[q,quat[_?scalarQ,_?scalarQ,_?scalarQ,_?scalarQ]]
 
 
-matQ[m_]:=And[Head@m===List,Dimensions@m==={3,3},Map[scalarQ,m,{2}]===ConstantArray[True,{3,3}]]
+matQ[m_]:=MatrixQ[m,scalarQ]&&Dimensions[m]=={3,3}
 
 
-symvectQ[v_]:=And[Count[Chop@v,0|(e_/;!NumericQ[e])]==3,Count[Chop@v,0]<3]
+symbolQ[e_]:=MatchQ[e,s_Symbol/;!ValueQ[s,Method->"SymbolDefinitionsPresent"]]
+
+
+symvectQ[v_]:=And[vectQ[v],Count[Chop[v],0|_?symbolQ|-_?symbolQ]==3,Count[Chop[v],0]<3]
 
 
 (* ::Subsubsection::Closed:: *)
@@ -419,19 +421,22 @@ symvectQ[v_]:=And[Count[Chop@v,0|(e_/;!NumericQ[e])]==3,Count[Chop@v,0]<3]
 (*    2:  All numeric*)
 (*    21: Numeric 180\[Degree] rotation matrix*)
 (*    3:  Mixed numeric and symbolic*)
-(*    33: Symbolic identity matrix*)
-(*    34: Symbolic matrix representing 90\[Degree] rotation around a base axis*)
-(*    35: Symbolic matrix representing 120\[Degree] rotation around an octant diagonal*)
-(*    36: Symbolic matrix representing 180\[Degree] rotation around a base axis*)
-(*    37: Symbolic matrix representing 180\[Degree] rotation around a base plane diagonal*)
-(*    38: Symbolic matrix representing 180\[Degree] rotation around axis in a base plane*)
-(*    39: Quat from symbolic single angle matrix, rotation axis in a base plane*)
+(*    30: Matrix representing symbolic angle rotation around a base axis*)
+(*    31: Symbolic identity matrix*)
+(*    32: Symbolic matrix representing 90\[Degree] rotation around a base axis*)
+(*    33: Symbolic matrix representing 120\[Degree] rotation around an octant diagonal*)
+(*    34: Symbolic matrix representing 180\[Degree] rotation around a base axis*)
+(*    35: Symbolic matrix representing 180\[Degree] rotation around a base plane diagonal*)
+(*    36: Symbolic matrix representing 180\[Degree] rotation around axis in a base plane*)
+(*    38: Euler 2 symbolic angles matrix*)
 (*    4:  All symbolic*)
-(*    40: Quat or matrix from basic symbolic function-free matrix or quat*)
-(*    41: Quat from Euler 3 symbolic angles matrix*)
-(*    42: Quat from Euler 2 symbolic angles matrix*)
-(*    48: Symbolic matrix representing 180\[Degree] rotation around axis out of base planes*)
-(*    49: Quat from symbolic single angle matrix, rotation axis out of base planes*)
+(*    40: Quat from matrix with only symbols*)
+(*    41: Matrix from quat with only symbols (that can be signed)*)
+(*    45: Symbolic matrix representing 180\[Degree] rotation around axis out of base planes*)
+(*    46: Symbolic matrix representing rotation around axis in a base plane*)
+(*    47: Symbolic matrix representing rotation around axis out of base planes*)
+(*    48: Euler 3 symbolic angles matrix, distinct axes*)
+(*    49: Euler 3 symbolic angles matrix, repeated axis*)
 
 
 (* ::Subsubsection::Closed:: *)
@@ -447,59 +452,13 @@ qType[q_quat]:=Module[
     True,4
   ];
   type=Switch[type,
-    1|2,type,
-    3,Which[
-        isQuatType39[q],39,
-        True,3
-      ],
+    1|2|3,type,
     4,Which[
-        isQuatType40[q],40,
-        isQuatType41[q],41,
-        isQuatType42[q],42,
-        isQuatType49[q],49,
-        True,4
-      ]
+      isQuatType40[q],40,
+      True,4
+    ]
   ];
   type
-]
-
-
-isQuatType39[q_]:=Or[isQuatType39HA@q,isQuatType39FA@q]
-
-
-isQuatType39HA[q_]:=With[
-  {
-  cmnA=Sqrt[2-a_Symbol^2+Cos[\[Theta]_Symbol]+a_Symbol^2*Cos[\[Theta]_Symbol]+1/2*(1+a_Symbol^2+Cos[\[Theta]_Symbol]-a_Symbol^2*Cos[\[Theta]_Symbol])],
-  cmnB=Sqrt[5-x_Symbol^2-y_Symbol^2+(3+x_Symbol^2+y_Symbol^2)*Cos[\[Theta]_Symbol]],
-  cmnC=Sqrt[1+2*Cos[\[Theta]_Symbol/2]^2+1/2*(1-2*a_Symbol^2+Cos[\[Theta]_Symbol]+2*a_Symbol^2*Cos[\[Theta]_Symbol])]
-  },
-  And[
-    MemberQ[{1,2},Count[q,0]],
-    Or[
-      MatchQ[q,quat[1/2*cmnA,Repeated[0|a_Symbol*Sin[\[Theta]_Symbol]/cmnA|-a_Symbol*Sin[\[Theta]_Symbol]/cmnA]]],
-      MatchQ[q,quat[cmnB/(2*Sqrt[2]),Repeated[0|Sqrt[2]*_Symbol*Sin[\[Theta]_Symbol]/cmnB|-Sqrt[2]*_Symbol*Sin[\[Theta]_Symbol]/cmnB]]],
-      MatchQ[q,quat[1/2*cmnC,Repeated[0|a_Symbol*Sin[\[Theta]_Symbol]/cmnC|-a_Symbol*Sin[\[Theta]_Symbol]/cmnC]]]
-    ]
-  ]
-]
-
-
-isQuatType39FA[q_]:=With[
-  {
-  cmnA=Sqrt[1+3*Cos[\[Theta]_Symbol]^2-a_Symbol^2*Sin[\[Theta]_Symbol]^2],
-  cmnB=Sqrt[1+3*Cos[\[Theta]_Symbol]^2+(x_Symbol^2-y_Symbol^2)*Sin[\[Theta]_Symbol]^2+(-x_Symbol^2+y_Symbol^2)*Sin[\[Theta]_Symbol]^2-(x_Symbol^2+y_Symbol^2)*Sin[\[Theta]_Symbol]^2],
-  cmnC=Sqrt[1+3*Cos[\[Theta]_Symbol]^2-2*a_Symbol^2*Sin[\[Theta]_Symbol]^2],
-  qVnumAC=2*a_Symbol*Cos[\[Theta]_Symbol]*Sin[\[Theta]_Symbol]+a_Symbol*Sin[2*\[Theta]_Symbol],
-  qVnumB=2*_Symbol*Cos[\[Theta]_Symbol]*Sin[\[Theta]_Symbol]+_Symbol*Sin[2*\[Theta]_Symbol]
-  },
-  And[
-    MemberQ[{1,2},Count[q,0]],
-    Or[
-      MatchQ[q,quat[1/2*cmnA,Repeated[0|qVnumAC/(2*cmnA)|-qVnumAC/(2*cmnA)]]],
-      MatchQ[q,quat[1/2*cmnB,Repeated[0|qVnumB/(2*cmnB)|-qVnumB/(2*cmnB)]]],
-      MatchQ[q,quat[1/2*cmnC,Repeated[0|qVnumAC/(2*cmnC)|-qVnumAC/(2*cmnC)]]]
-    ]
-  ]
 ]
 
 
@@ -513,107 +472,6 @@ isQuatType40[q_]:=Module[
     (e12_?ptrn- e21_?ptrn)/(2 Sqrt[1 + e11_?ptrn + e22_?ptrn + e33_?ptrn])
   ];
   MatchQ[q,theform]
-]
-
-
-isQuatType41[q_]:=And[
-  Length[Cases[q,_Symbol,-1]//DeleteDuplicates]==3,
-  Or[isQuatType41HA@q,isQuatType41FA@q]
-]
-
-
-isQuatType41HA[q_]:=With[
-  {
-  cmnA=Sqrt[1+Cos[\[Alpha]_Symbol] Cos[\[Beta]_Symbol]+Cos[\[Alpha]_Symbol] Cos[\[Gamma]_Symbol]+Cos[\[Beta]_Symbol] Cos[\[Gamma]_Symbol]-Sin[\[Alpha]_Symbol] Sin[\[Beta]_Symbol] Sin[\[Gamma]_Symbol]],
-  cmnB=Sqrt[1+Cos[\[Alpha]_Symbol] Cos[\[Beta]_Symbol]+Cos[\[Alpha]_Symbol] Cos[\[Gamma]_Symbol]+Cos[\[Beta]_Symbol] Cos[\[Gamma]_Symbol]+Sin[\[Alpha]_Symbol] Sin[\[Beta]_Symbol] Sin[\[Gamma]_Symbol]],
-  cmnC=Sqrt[1+Cos[\[Beta]_Symbol]+Cos[\[Alpha]_Symbol] Cos[\[Gamma]_Symbol]+Cos[\[Alpha]_Symbol] Cos[\[Beta]_Symbol] Cos[\[Gamma]_Symbol]-Sin[\[Alpha]_Symbol] Sin[\[Gamma]_Symbol]-Cos[\[Beta]_Symbol] Sin[\[Alpha]_Symbol] Sin[\[Gamma]_Symbol]],
-  cmnD=Sqrt[1+Cos[\[Beta]_Symbol]+Cos[\[Alpha]_Symbol] Cos[\[Gamma]_Symbol]+Cos[\[Alpha]_Symbol] Cos[\[Beta]_Symbol] Cos[\[Gamma]_Symbol]+Sin[\[Alpha]_Symbol] Sin[\[Gamma]_Symbol]+Cos[\[Beta]_Symbol] Sin[\[Alpha]_Symbol] Sin[\[Gamma]_Symbol]]
-  },
-  And[
-    Length[Cases[q,_Symbol,-1]//DeleteDuplicates]==3,
-    Or[
-      {Count[q,Cos[_Symbol],-1],Count[q,Sin[_Symbol],-1]}=={32,24},
-      {Count[q,Cos[_Symbol],-1],Count[q,Sin[_Symbol],-1]}=={36,26}
-    ],
-    Or[
-      MatchQ[q,quat[1/2*cmnA,_/(2*cmnA),_/(2*cmnA),_/(2*cmnA)]],
-      MatchQ[q,quat[1/2*cmnB,_/(2*cmnB),_/(2*cmnB),_/(2*cmnB)]],
-      MatchQ[q,quat[1/2*cmnC,_/(2*cmnC),_/(2*cmnC),_/(2*cmnC)]],
-      MatchQ[q,quat[1/2*cmnD,_/(2*cmnD),_/(2*cmnD),_/(2*cmnD)]]
-    ]
-  ]
-]
-
-
-isQuatType41FA[q_]:=Module[
-  {\[Alpha]1=\[Alpha]_Symbol,\[Beta]1=\[Beta]_Symbol,\[Gamma]1=\[Gamma]_Symbol,\[Alpha]2=\[Alpha]_Symbol*2,\[Beta]2=\[Beta]_Symbol*2,\[Gamma]2=\[Gamma]_Symbol*2,cmnA,cmnB,cmnC,cmnD,cmnE,cmnF},
-  cmnA=Sqrt[1+Cos[\[Alpha]2] Cos[\[Beta]2]+Cos[\[Alpha]1]^2 Cos[\[Gamma]2]+Cos[\[Beta]2] Cos[\[Gamma]2]-Cos[\[Gamma]2] Sin[\[Alpha]1]^2-8 Cos[\[Alpha]1] Cos[\[Beta]1] Cos[\[Gamma]1] Sin[\[Alpha]1] Sin[\[Beta]1] Sin[\[Gamma]1]];
-  cmnB=Sqrt[1+Cos[\[Alpha]2] Cos[\[Beta]2]+Cos[\[Alpha]1]^2 Cos[\[Gamma]2]+Cos[\[Beta]2] Cos[\[Gamma]2]-Cos[\[Gamma]1]^2 Sin[\[Alpha]1]^2+Sin[\[Alpha]1]^2 Sin[\[Gamma]1]^2+Sin[\[Alpha]2] Sin[\[Beta]2] Sin[\[Gamma]2]];
-  cmnC=Sqrt[1+Cos[\[Beta]1]^2 Cos[\[Gamma]2]+Cos[\[Alpha]2] (Cos[\[Beta]2]+Cos[\[Gamma]2])-Cos[\[Gamma]2] Sin[\[Beta]1]^2-8 Cos[\[Alpha]1] Cos[\[Beta]1] Cos[\[Gamma]1] Sin[\[Alpha]1] Sin[\[Beta]1] Sin[\[Gamma]1]];
-  cmnD=Sqrt[1+Cos[\[Beta]1]^2 Cos[\[Gamma]2]+Cos[\[Alpha]2] (Cos[\[Beta]2]+Cos[\[Gamma]2])-Cos[\[Gamma]1]^2 Sin[\[Beta]1]^2+Sin[\[Beta]1]^2 Sin[\[Gamma]1]^2+Sin[\[Alpha]2] Sin[\[Beta]2] Sin[\[Gamma]2]];
-  cmnE=Sqrt[Cos[\[Beta]1]^2 Cos[\[Alpha]1+\[Gamma]1]^2];
-  cmnF=Sqrt[Cos[\[Beta]1]^2 Cos[\[Alpha]1-\[Gamma]1]^2];
-  Or[
-    MatchQ[q,quat[1/2*cmnA,Repeated[_/(2*cmnA)|_/(4*cmnA)]]],
-    MatchQ[q,quat[1/2*cmnB,Repeated[_/(2*cmnB)|_/(4*cmnB)]]],
-    MatchQ[q,quat[1/2*cmnC,Repeated[_/(2*cmnC)]]],
-    MatchQ[q,quat[1/2*cmnD,Repeated[_/(2*cmnD)]]],
-    MatchQ[q,quat[cmnE,Repeated[_/(-4*cmnE)|_/(-2*cmnE)|_/(2*cmnE)|_/(4*cmnE)]]],
-    MatchQ[q,quat[cmnF,Repeated[_/(-4*cmnF)|_/(-2*cmnF)|_/(2*cmnF)|_/(4*cmnF)]]]
-  ]
-]
-
-
-isQuatType42[q_]:=Module[
-  {\[Alpha]=\[Alpha]_Symbol|\[Alpha]_Symbol*2,\[Beta]=\[Beta]_Symbol|\[Beta]_Symbol*2,cmn,qVa,qVb,qVc,qVd},
-  cmn=Sqrt[1+Cos[\[Alpha]]+Cos[\[Beta]]+Cos[\[Alpha]]*Cos[\[Beta]]];
-  qVa=(Sin[\[Alpha]]+Cos[\[Beta]]*Sin[\[Alpha]])/(2*cmn);
-  qVb=(-Sin[\[Alpha]]-Cos[\[Beta]]*Sin[\[Alpha]])/(2*cmn);
-  qVc=(Sin[\[Alpha]]*Sin[\[Beta]])/(2*cmn);
-  qVd=2*Cos[\[Alpha]_Symbol]*Cos[\[Beta]_Symbol]*Sin[\[Alpha]_Symbol]*Sin[\[Beta]_Symbol]/cmn;
-  And[
-    Length[Cases[q,_Symbol,-1]//DeleteDuplicates]==2,
-    Count[q,Sin[\[Alpha]],-1]==6,
-    MemberQ[{18,20},Count[q,Cos[\[Alpha]],-1]],
-    MatchQ[q[[1]],1/2*cmn],
-    And@@Map[MatchQ[#,qVa|qVb|qVc|-qVc|qVd|-qVd]&,Take[q,-3]]
-  ]
-]
-
-
-isQuatType49[q_]:=Or[isQuatType49HA@q,isQuatType49FA@q]
-
-
-isQuatType49HA[q_]:=With[
-  {
-  cmnA=Sqrt[5-x_Symbol^2-y_Symbol^2-z_Symbol^2+(3+x_Symbol^2+y_Symbol^2+z_Symbol^2)*Cos[\[Theta]_Symbol]],
-  cmnB=Sqrt[5-2*a_Symbol^2-z_Symbol^2+(3+2*a_Symbol^2+z_Symbol^2)*Cos[\[Theta]_Symbol]],
-  q0C=1/2*Sqrt[1+3*(1-a_Symbol^2+(1+a_Symbol^2)*Cos[\[Theta]_Symbol])/2],
-  qVC=2*a_Symbol*Sin[\[Theta]_Symbol]/Sqrt[10-6*a_Symbol^2+6*(1+a_Symbol^2)*Cos[\[Theta]_Symbol]]
-  },
-  Or[
-    MatchQ[q,quat[cmnA/(2*Sqrt[2]),Repeated[Sqrt[2]*_Symbol*Sin[\[Theta]_Symbol]/cmnA|-Sqrt[2]*_Symbol*Sin[\[Theta]_Symbol]/cmnA]]],
-    MatchQ[q,quat[cmnB/(2*Sqrt[2]),Repeated[Sqrt[2]*_Symbol*Sin[\[Theta]_Symbol]/cmnB|-Sqrt[2]*_Symbol*Sin[\[Theta]_Symbol]/cmnB]]],
-    MatchQ[q,quat[q0C,Repeated[qVC|-qVC]]]
-  ]
-]
-
-
-isQuatType49FA[q_]:=With[
-  {
-  cmnA=Sqrt[1+3*Cos[\[Theta]_Symbol]^2-(x_Symbol^2+y_Symbol^2+z_Symbol^2)*Sin[\[Theta]_Symbol]^2],
-  cmnB=Sqrt[1+3*Cos[\[Theta]_Symbol]^2-(2*a_Symbol^2+z_Symbol^2)*Sin[\[Theta]_Symbol]^2],
-  cmnC=Sqrt[1+3*Cos[\[Theta]_Symbol]^2-3*a_Symbol^2*Sin[\[Theta]_Symbol]^2],
-  qVnumAB1=_Symbol*Sin[2*\[Theta]_Symbol],
-  qVnumAB2=2*_Symbol*Cos[\[Theta]_Symbol]*Sin[\[Theta]_Symbol],
-  qVnumC1=2*a_Symbol*Sin[\[Theta]_Symbol]*(Cos[\[Theta]_Symbol]-a_Symbol*Sin[\[Theta]_Symbol])+2*a_Symbol*Sin[\[Theta]_Symbol]*(Cos[\[Theta]_Symbol]+a_Symbol*Sin[\[Theta]_Symbol]),
-  qVnumC2=2*a_Symbol*Sin[\[Theta]_Symbol]*(-Cos[\[Theta]_Symbol]+a_Symbol*Sin[\[Theta]_Symbol])-2*a_Symbol*Sin[\[Theta]_Symbol]*(Cos[\[Theta]_Symbol]+a_Symbol*Sin[\[Theta]_Symbol])
-  },
-  Or[
-    MatchQ[q,quat[1/2*cmnA,Repeated[qVnumAB1/cmnA|-qVnumAB2/cmnA]]],
-    MatchQ[q,quat[1/2*cmnB,Repeated[qVnumAB1/cmnB|-qVnumAB2/cmnB]]],
-    MatchQ[q,quat[1/2*cmnC,Repeated[qVnumC1/(2*cmnC)|-qVnumC1/(2*cmnC)|qVnumC2/(2*cmnC)|-qVnumC2/(2*cmnC)]]]
-  ]
 ]
 
 
@@ -642,18 +500,24 @@ mType[m_]:=Module[
     3,Which[
         isMatrixWithEmptyAxes[m],0,
         isLHAlignedMatrix[m],0,
+        isMatrixType30[m],30,
+        isMatrixType31[m],31,
+        isMatrixType32[m],32,
         isMatrixType33[m],33,
         isMatrixType34[m],34,
         isMatrixType35[m],35,
         isMatrixType36[m],36,
-        isMatrixType37[m],37,
         isMatrixType38[m],38,
         True,3
       ],
     4,Which[
         isInvalidSymbolicMatrix[m],0,
-        isMatrixType40[m],40,
+        isMatrixType41[m],41,
+        isMatrixType45[m],45,
+        isMatrixType46[m],46,
+        isMatrixType47[m],47,
         isMatrixType48[m],48,
+        isMatrixType49[m],49,
         True,4
       ]
   ];
@@ -701,14 +565,32 @@ isLHAlignedMatrix[m_]:=With[
 ]
 
 
-isMatrixType33[m_]:=And[
+isMatrixType30[m_]:=With[
+  {
+    ms=Simplify@m,
+    norm=FirstCase[Simplify[m],_?Positive,1,{2}],
+    diag={1,Cos[\[Alpha]_Symbol],Cos[\[Alpha]_Symbol]},
+    offdiags={-Sin[\[Alpha]_Symbol],Sin[\[Alpha]_Symbol]}
+  },
+  And[
+    Count[m,0|0.,{2}]==4,
+    Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==1,
+    Cases[ms,Except[0|0.,_?NumberQ],Infinity]//Abs//Apply[SameQ],
+    MatchQ[Sort@Diagonal@ms,norm*diag],
+    MatchQ[ReplacePart[ms,{i_,i_}->Nothing]//Flatten//DeleteCases[0|0.]//Sort,norm*offdiags],
+    DisjointQ[First@Position[Diagonal@ms,_?NumberQ,{1}],Union@@Position[ms,Alternatives@@(norm*offdiags),{2}]]
+  ]
+]
+
+
+isMatrixType31[m_]:=And[
   isAlignedMatrix[m],
   Count[Diagonal[m],Except[0|0.]]==3,
   Count[Map[FreeQ[#,_?Negative]&,Diagonal@m],True]==3
 ]
 
 
-isMatrixType34[m_]:=And[
+isMatrixType32[m_]:=And[
   isAlignedMatrix[m],
   Count[Diagonal@m,0|0.]==2,
   FreeQ[FirstCase[Diagonal@m,Except[0|0.]],_?Negative],
@@ -716,21 +598,21 @@ isMatrixType34[m_]:=And[
 ]
 
 
-isMatrixType35[m_]:=And[
+isMatrixType33[m_]:=And[
   isAlignedMatrix[m],
   Count[Diagonal@m,0|0.]==3,
   Count[Map[FreeQ[#,_?Negative]&,Cases[m,Except[0|0.],{2}]],True]//MatchQ[1|3]
 ]
 
 
-isMatrixType36[m_]:=And[
+isMatrixType34[m_]:=And[
   isAlignedMatrix[m],
   Count[Diagonal@m,Except[0|0.]]==3,
   Count[Map[FreeQ[#,_?Negative]&,Diagonal@m],True]==1
 ]
 
 
-isMatrixType37[m_]:=And[
+isMatrixType35[m_]:=And[
   isAlignedMatrix[m],
   Count[Diagonal@m,0|0.]==2,
   !FreeQ[FirstCase[Diagonal@m,Except[0|0.]],_?Negative],
@@ -738,28 +620,48 @@ isMatrixType37[m_]:=And[
 ]
 
 
-isMatrixType38[m_]:=With[
-  {mx=Expand@m,diags={s_Symbol^2-t_Symbol^2,-s_Symbol^2+t_Symbol^2,-s_Symbol^2-t_Symbol^2}},
+isMatrixType36[m_]:=With[
+  {
+    mx=Expand@m,
+    norm=Function[If[And@@
+      Through[{MatchQ[{_?Negative,_?Negative,_?Positive}],SameQ@*Abs}[Sort@Cases[Factor@Diagonal@#,_?NumberQ,{2}]]],
+      FirstCase[Diagonal@#,_?Positive,"",{3}],1
+    ]],
+    diags=Alternatives[
+      {{-s_Symbol^2,-t_Symbol^2},{s_Symbol^2,-t_Symbol^2},{-s_Symbol^2,t_Symbol^2}},
+      {{s_Symbol^2,-t_Symbol^2},{-s_Symbol^2,-t_Symbol^2},{-s_Symbol^2,t_Symbol^2}},
+      {{s_Symbol^2,-t_Symbol^2},{-s_Symbol^2,t_Symbol^2},{-s_Symbol^2,-t_Symbol^2}}
+    ],
+    offdiags=Alternatives[{2*s_Symbol*t_Symbol,2*s_Symbol*t_Symbol},{-2*s_Symbol*t_Symbol,-2*s_Symbol*t_Symbol}]
+  },
   And[
     is180\[Degree]Matrix[m],
     Count[m,0|0.,{2}]==4,
     Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==2,
-    Or[
-      MatchQ[Diagonal@m,Alternatives@@Permutations@diags],
-      MatchQ[Replace[Diagonal@mx,{n_?Positive->1,n_?Negative->-1},{3}],Alternatives@@Permutations@diags]
-    ],
-    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],Cases[Diagonal@mx,_?NumberQ,{3}]//Abs//Apply[SameQ],True],
-    MatchQ[
-      Extract[
-        m,
-        Complement[{1,2,3},FirstPosition[Map[Count[#,_?Negative,Infinity]&,Diagonal@mx],2]]
-      ],
-      (-2|2)*s_Symbol*t_Symbol|_?NumberQ*s_Symbol*t_Symbol
-    ],
-    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],
-      2*Abs@FirstCase[Diagonal@mx,_?NumberQ,"",{3}]==Abs@First@Cases[ReplacePart[m,{i_,i_}->Nothing],_?NumberQ,{3}],
-      True
-    ]
+    MatchQ[Diagonal@mx/norm[mx]//Expand//MapApply[List],diags],
+    MatchQ[Flatten@ReplacePart[mx,{i_,i_}->0]/norm[mx]//DeleteCases[0|0.],offdiags],
+    DisjointQ[FirstPosition[Diagonal@mx/norm[mx]//Expand//MapApply[List],diags[[1,1]]],Position[mx/norm[mx],offdiags[[All,1]]]//Flatten]  
+  ]
+]
+
+
+isMatrixType38[m_]:=With[
+  {offdiag=
+    {
+      0,
+      Sin[s_Symbol],
+      Cos[t_Symbol]*Sin[s_Symbol],
+      Sin[t_Symbol],
+      Cos[s_Symbol]*Sin[t_Symbol],
+      Sin[s_Symbol]*Sin[t_Symbol]
+    }
+  },
+  And[
+    Count[m,0|0.,{2}]==1,
+    Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==2,
+    MatchQ[Sort@Diagonal@m,{Cos[s_Symbol],Cos[t_Symbol],Cos[s_Symbol]*Cos[t_Symbol]}],
+    MatchQ[DeleteCases[Sort@Flatten@ReplacePart[m,{i_,i_}->Nothing],-1,Infinity],offdiag],
+    MatchQ[Count[Flatten@ReplacePart[m,{i_,i_}->Nothing],-1,Infinity],2|3]
   ]
 ]
 
@@ -776,7 +678,7 @@ isInvalidSymbolicMatrix[m_]:=Module[
 ]
 
 
-isMatrixType40[m_]:=With[
+isMatrixType41[m_]:=With[
   {offdiags=ReplacePart[m,{i_,i_}->Nothing]//Expand//Flatten},
   And[
     Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==4,
@@ -789,26 +691,129 @@ isMatrixType40[m_]:=With[
 ]
 
 
-isMatrixType48[m_]:=With[
+isMatrixType45[m_]:=With[
   {
     mx=Expand@m,
+    norm=Function[If[And@@
+      Through[{MatchQ[{_?Positive,_?Negative,_?Negative}],SameQ@*Abs}[Cases[Factor@Diagonal@#,_?NumberQ,{2}]]],
+      FirstCase[Diagonal@#,_?Positive,"",{3}],1
+    ]],
     diag=Map[MapAt[Minus,-x_Symbol^2-y_Symbol^2-z_Symbol^2,#]&,{1,2,3}],
-    offdiag={x_Symbol*y_Symbol,x_Symbol*z_Symbol,y_Symbol*z_Symbol}
+    offdiags={x_Symbol*y_Symbol|-x_Symbol*y_Symbol,x_Symbol*z_Symbol|-x_Symbol*z_Symbol,y_Symbol*z_Symbol|-y_Symbol*z_Symbol}
   },
   And[
     is180\[Degree]Matrix[m],
     Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==3,
-    Or[
-      MatchQ[Diagonal@m,diag],
-      MatchQ[Replace[Diagonal@mx,{n_?Positive->1,n_?Negative->-1},{3}],diag]
+    MatchQ[Diagonal@mx/norm[mx]//Expand,diag],
+    MatchQ[Extract[m,{{1,2},{1,3},{3,2}}]/(2*norm[mx]),offdiags],
+    Count[{m[[1,2]],m[[1,3]],m[[2,3]]},_?Negative,{2}]//MatchQ[0|2],
+    Extract[m,{{1,2},{1,3},{2,3}}]===Extract[m,{{2,1},{3,1},{3,2}}]
+  ]
+]
+
+
+isMatrixType46[m_]:=With[
+  {
+    mx=Expand@m,
+    norm=Function[If[
+      MatchQ[Diagonal@Factor@#,{n_?Positive*_,n_?Positive*_,n_?Positive*_}],FirstCase[Diagonal@Factor@#,n_?Positive,"",{2}],1
+    ]],
+    diags=Alternatives[
+      Map[MapAt[Minus,{Cos[\[Alpha]_Symbol/2]^2,s_Symbol^2*Sin[\[Alpha]_Symbol/2]^2,t_Symbol^2*Sin[\[Alpha]_Symbol/2]^2},#]&,{{{2},{3}},3,2}],
+      Map[MapAt[Minus,{Cos[\[Alpha]_Symbol/2]^2,s_Symbol^2*Sin[\[Alpha]_Symbol/2]^2,t_Symbol^2*Sin[\[Alpha]_Symbol/2]^2},#]&,{3,{{2},{3}},2}],
+      Map[MapAt[Minus,{Cos[\[Alpha]_Symbol/2]^2,s_Symbol^2*Sin[\[Alpha]_Symbol/2]^2,t_Symbol^2*Sin[\[Alpha]_Symbol/2]^2},#]&,{3,2,{{2},{3}}}]
     ],
-    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],Cases[Diagonal@mx,_?NumberQ,{3}]//Abs//Apply[SameQ],True],
-    MatchQ[{m[[1,2]],m[[1,3]],m[[2,3]]},(-2|2)*offdiag|_?NumberQ*offdiag],
-    If[!FreeQ[Diagonal@m,_?NumberQ,{2}],
-      2*Abs@FirstCase[Diagonal@mx,_?NumberQ,"",{3}]==Abs@First@Cases[ReplacePart[m,{i_,i_}->Nothing],_?NumberQ,{3}],
-      True
-    ],
-    Count[{m[[1,2]],m[[1,3]],m[[2,3]]},_?Negative,{2}]//MatchQ[0|2]
+    offdiags=Alternatives[
+      s_Symbol*Cos[\[Alpha]_Symbol/2]*Sin[\[Alpha]_Symbol/2],-s_Symbol*Cos[\[Alpha]_Symbol/2]*Sin[\[Alpha]_Symbol/2],
+      t_Symbol*Cos[\[Alpha]_Symbol/2]*Sin[\[Alpha]_Symbol/2],-t_Symbol*Cos[\[Alpha]_Symbol/2]*Sin[\[Alpha]_Symbol/2],
+      s_Symbol*t_Symbol*Sin[\[Alpha]_Symbol/2]^2,-s_Symbol*t_Symbol*Sin[\[Alpha]_Symbol/2]^2
+    ]
+  },
+  And[
+    Length[Cases[mx,_Symbol,{-1}]//DeleteDuplicates]==3,
+    MatchQ[Diagonal@Factor@mx/norm[mx]//MapApply[List],diags],
+    And@@Map[MatchQ[#/(2*norm[mx]),offdiags]&,Flatten@ReplacePart[mx,{i_,i_}->Nothing]],
+    Length[ReplacePart[m,{i_,i_}->Nothing]//Flatten//DeleteDuplicates]==5,
+    SameQ@@Cases[Flatten@ReplacePart[m,{i_,i_}->Nothing],x_/;FreeQ[x,Cos]],
+    DisjointQ[
+      FirstPosition[Diagonal@Factor@mx/norm[mx]//MapApply[List],diags[[1,1]]],Position[mx/(2*norm[mx]),Take[offdiags,-2]]//Flatten
+    ]
+  ]
+]
+
+
+isMatrixType47[m_]:=Module[
+  {
+    mx=Expand@m,
+    diag=Map[MapAt[Minus,Cos[\[Alpha]_Symbol/2]^2-x_Symbol^2 Sin[\[Alpha]_Symbol/2]^2-y_Symbol^2 Sin[\[Alpha]_Symbol/2]^2-z_Symbol^2 Sin[\[Alpha]_Symbol/2]^2,#]&,{2,3,4}],
+    norm=Function[FirstCase[Diagonal@Factor@#,_?Positive,1,{2}]],
+    offdiags=Alternatives@@Plus@@@Map[{p_Symbol*Cos[\[Alpha]_Symbol/2]*Sin[\[Alpha]_Symbol/2],q_Symbol*r_Symbol*Sin[\[Alpha]_Symbol/2]^2}*#&,Tuples[{1,-1},2]]
+   },
+  And[
+    Length[Cases[mx,_Symbol,{-1}]//DeleteDuplicates]==4,
+    MatchQ[Diagonal@mx//Factor,diag|n_?Positive*diag//Factor],
+    And@@Map[MatchQ[#/(2*norm[mx])//Expand,offdiags]&,Flatten@ReplacePart[mx,{i_,i_}->Nothing]],
+    DuplicateFreeQ[Flatten@ReplacePart[mx,{i_,i_}->Nothing]]
+  ]
+]
+
+
+isMatrixType48[m_]:=With[
+  {
+    diag1=
+    {
+      Cos[s_Symbol]*Cos[t_Symbol],Cos[t_Symbol]*Cos[u_Symbol],
+      Cos[s_Symbol]*Cos[u_Symbol]+Sin[s_Symbol]*Sin[t_Symbol]*Sin[u_Symbol]
+    },
+    diag2=
+    {
+      Cos[s_Symbol]*Cos[t_Symbol],Cos[t_Symbol]*Cos[u_Symbol],
+      Cos[s_Symbol]*Cos[u_Symbol]-Sin[s_Symbol]*Sin[t_Symbol]*Sin[u_Symbol]
+    },
+    offdiag=
+    {
+      Cos[t_Symbol]*Sin[s_Symbol],Sin[t_Symbol],Cos[t_Symbol]*Sin[u_Symbol],
+      Cos[u_Symbol]*Sin[s_Symbol]*Sin[t_Symbol]+Cos[s_Symbol]*Sin[u_Symbol],
+      Cos[s_Symbol]*Cos[u_Symbol]*Sin[t_Symbol]+Sin[s_Symbol]*Sin[u_Symbol],
+      Cos[u_Symbol]*Sin[s_Symbol]+Cos[s_Symbol]*Sin[t_Symbol]*Sin[u_Symbol]
+    }
+  },
+  And[
+    Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==3,
+    MatchQ[Sort@Diagonal@m,diag1|diag2],
+    MatchQ[DeleteCases[Sort@Flatten@ReplacePart[m,{i_,i_}->Nothing],-1,Infinity],offdiag],
+    MatchQ[Count[Flatten@ReplacePart[m,{i_,i_}->Nothing],-1,Infinity],3|5]
+  ]
+]
+
+
+isMatrixType49[m_]:=With[
+  {
+    diag1=
+    {
+      Cos[t_Symbol],
+      Cos[s_Symbol]*Cos[t_Symbol]*Cos[u_Symbol]+Sin[s_Symbol]*Sin[u_Symbol],
+      Cos[s_Symbol]*Cos[u_Symbol]+Cos[t_Symbol]*Sin[s_Symbol]*Sin[u_Symbol]
+    },
+    diag2=
+    {
+      Cos[t_Symbol],
+      Cos[s_Symbol]*Cos[t_Symbol]*Cos[u_Symbol]-Sin[s_Symbol]*Sin[u_Symbol],
+      Cos[s_Symbol]*Cos[u_Symbol]-Cos[t_Symbol]*Sin[s_Symbol]*Sin[u_Symbol]
+    },
+    offdiag=
+    {
+      Cos[s_Symbol]*Sin[t_Symbol],Cos[u_Symbol]*Sin[t_Symbol],
+      Sin[s_Symbol]*Sin[t_Symbol],Sin[t_Symbol]*Sin[u_Symbol],
+      Cos[t_Symbol]*Cos[u_Symbol]*Sin[s_Symbol]+Cos[s_Symbol]*Sin[u_Symbol],
+      Cos[u_Symbol]*Sin[s_Symbol]+Cos[s_Symbol]*Cos[t_Symbol]*Sin[u_Symbol]
+    }
+  },
+  And[
+    Length[Cases[m,_Symbol,{-1}]//DeleteDuplicates]==3,
+    MatchQ[Sort@Diagonal@m,diag1|diag2],
+    MatchQ[DeleteCases[Sort@Flatten@ReplacePart[m,{i_,i_}->Nothing],-1,Infinity],offdiag],
+    MatchQ[Count[Flatten@ReplacePart[m,{i_,i_}->Nothing],-1,Infinity],3|4|5]
   ]
 ]
 
@@ -817,7 +822,7 @@ isMatrixType48[m_]:=With[
 (*quatToFromMatrix, quat input*)
 
 
-mBasicFromQ[q:quat[q0_,q1_,q2_,q3_]]:=Module[
+mFromSymbolsOnlyQ[q:quat[q0_,q1_,q2_,q3_]]:=Module[
   {m=IdentityMatrix@3,qV,trace},
   qV=Numerator/@Take[q,-3];
   m[[2,3]]=First@Cases[qV[[1]],Except[-_]];
@@ -890,17 +895,31 @@ qFromSymbolicM[m_]:=Module[
   q1=(m[[2,3]]-m[[3,2]])/(4 q0);
   q2=(m[[3,1]]-m[[1,3]])/(4 q0);
   q3=(m[[1,2]]-m[[2,1]])/(4 q0);
-  {q0,q1,q2,q3}//If[LeafCount[#]>220,Simplify@#,#]&//qOut
+  {q0,q1,q2,q3}//qOut
+]
+
+
+qFromSymbolicAngleRotAroundBaseAxisM[m_]:=Module[
+  {norm,q0,qV,sign},
+  norm=FirstCase[m,_?Positive,1,{2}];
+  q0=Cos[FirstCase[m,_Symbol,"",{-1}]/2];
+  qV=Diagonal[m]/norm/.{1->Sin[FirstCase[m,_Symbol,"",{-1}]/2],Cos[_]->0};
+  sign=Switch[First@Position[Diagonal@m,_?NumberQ,{1}],
+    {1},FreeQ[m[[2,3]],_?Negative]/.{True->1,False->-1},
+    {2},FreeQ[m[[3,1]],_?Negative]/.{True->1,False->-1},
+    {3},FreeQ[m[[1,2]],_?Negative]/.{True->1,False->-1}
+  ];
+  Sqrt[norm]*Prepend[sign*qV,q0]//Apply[quat]
 ]
 
 
 qFromSymbolicIdentityM[m_]:=With[
   {e=First@Diagonal[m]},
-  {PowerExpand@Sqrt@e,0,0,0}//qOut
+  {PowerExpand@Sqrt@e,0,0,0}//Apply[quat]
 ]
 
 
-qFrom90\[Degree]AroundBaseAxisM[m_]:=Module[
+qFrom90\[Degree]AroundBaseAxisSymbolicM[m_]:=Module[
   {e,i,sign},
   e=Last@Sort@Diagonal[m];
   i=First@Flatten@Position[Diagonal@m,e];
@@ -909,11 +928,11 @@ qFrom90\[Degree]AroundBaseAxisM[m_]:=Module[
     2,Sign@(m/e)[[3,1]],
     3,Sign@(m/e)[[1,2]]
   ];
-  ReplacePart[{PowerExpand@Sqrt[e/2],0,0,0},i+1->sign*PowerExpand@Sqrt[e/2]]//qOut
+  ReplacePart[{PowerExpand@Sqrt[e/2],0,0,0},i+1->sign*PowerExpand@Sqrt[e/2]]//Apply[quat]
 ]
 
 
-qFrom120\[Degree]AroundOctantDiagonalM[m_]:=Module[
+qFrom120\[Degree]AroundOctantDiagonalSymbolicM[m_]:=Module[
   {e,signs},
   e=Last@Sort@Flatten@m;
   signs={
@@ -922,66 +941,120 @@ qFrom120\[Degree]AroundOctantDiagonalM[m_]:=Module[
     (m/e)[[3,1]]-(m/e)[[1,3]],
     (m/e)[[1,2]]-(m/e)[[2,1]]
   };
-  ConstantArray[PowerExpand@Sqrt@e/2,4]*signs//qOut
+  ConstantArray[PowerExpand@Sqrt@e/2,4]*signs//Apply[quat]
 ]
 
 
-qFrom180\[Degree]AroundBaseAxisM[m_]:=Module[
+qFrom180\[Degree]AroundBaseAxisSymbolicM[m_]:=Module[
   {e,i},
   e=Last@Sort@Diagonal[m];
   i=First@Flatten@Position[Diagonal@m,e,{1}];
-  ReplacePart[{0,0,0,0},i+1->PowerExpand@Sqrt@e]//qOut
+  ReplacePart[{0,0,0,0},i+1->PowerExpand@Sqrt@e]//Apply[quat]
 ]
 
 
-qFrom180\[Degree]AroundPlaneDiagonalM[m_]:=Module[
+qFrom180\[Degree]AroundPlaneDiagonalSymbolicM[m_]:=Module[
   {e,i,sign,q},
   e=-Last@Sort@Diagonal[m];
   i=First@Flatten@Position[Diagonal@m,-e];
   sign=Sign@First@Total@Cases[ReplacePart[m,{j_,j_}->0]//Flatten,Except[0|0.]];
   q=PowerExpand@ReplacePart[{0,Sqrt[e/2],Sqrt[e/2],Sqrt[e/2]},i+1->0];
-  Replace[q,{head:Repeated[0],e1:Except[0],tail__}:>{head,sign*e1,tail}]//qOut
+  Replace[q,{head:Repeated[0],e1:Except[0],tail__}:>{head,sign*e1,tail}]//Apply[quat]
 ]
 
 
-qFrom180\[Degree]AroundAxisInBasePlaneM[m_]:=Module[
-  {norm,diag,axis,sign},
-  norm=Switch[FreeQ[Diagonal@m,_?NumberQ,{2}],
-    True,1,
-    False,First@Cases[Expand@Diagonal@m,_?NumberQ,{3}]//Abs
-  ];
-  diag=Switch[norm,
-    1,Diagonal@m,
-    _,Replace[Expand@Diagonal@m,{n_?Positive->1,n_?Negative->-1},{3}]
-  ];
-  axis=PowerExpand[Sqrt[diag]/.-x_Symbol^2->0];
-  sign=FirstCase[ReplacePart[m,{i_,i_}->Nothing],_?NumberQ,"",{3}]//Sign;
-  Prepend[MapAt[sign*#&,Sqrt[norm]*axis,FirstPosition[axis,Except@0,Heads->False]],0]//Apply[quat]]
-
-
-qFrom180\[Degree]AroundAxisOutOfBasePlaneM[m_]:=Module[
-  {norm,diag,axis,signs},
-  norm=Switch[FreeQ[Diagonal@m,_?NumberQ,{2}],
-    True,1,
-    False,First@Cases[Expand@Diagonal@m,_?NumberQ,{3}]//Abs
-  ];
-  diag=Switch[norm,
-    1,Diagonal@m,
-    _,Replace[Expand@Diagonal@m,{n_?Positive->1,n_?Negative->-1},{3}]
-  ];
-  axis=PowerExpand[Sqrt[diag]/.-x_Symbol^2->0];
-  signs=Sign[Times@@@Map[Cases[#,_?NumberQ,{2}]&,ReplacePart[m,{i_,i_}->Nothing]]];
-  Prepend[signs*Sqrt[norm]*axis,0]//Apply[quat]
+qFrom180\[Degree]AroundAxisInBasePlaneSymbolicM[m_]:=Module[
+  {mx=Expand@m,axis,sign},
+  axis=PowerExpand[Sqrt[Diagonal@mx]/._?Negative*_Symbol^2->0];
+  sign=FirstCase[ReplacePart[mx,{i_,i_}->Nothing],_?NumberQ,"",{3}]//Sign;
+  Prepend[MapAt[sign*#&,axis,FirstPosition[axis,Except@0,"",{1},Heads->False]],0]//Apply[quat]
 ]
 
 
-qBasicFromM[m_]:=Module[
+qFromEuler2SymbolicAnglesM[m_]:=Module[
+  {ax1,ax2,ax3,sign1,sign2,angle1,angle2},
+  ax2=First@FirstPosition[m,0];
+  ax3=First@First@Position[Diagonal@m,Cos[s_Symbol]*Cos[t_Symbol],{1}];
+  ax1=Complement[{1,2,3},{ax2,ax3}]//First;
+  sign1=If[MatchQ[m[[ax2,ax3]],-_],-1,1]*Signature[{ax1,ax2,ax3}];
+  sign2=If[MatchQ[m[[ax3,ax1]],-_],-1,1]*Signature[{ax1,ax2,ax3}];
+  angle1=FirstCase[m[[ax2,ax2]],_Symbol];
+  angle2=FirstCase[m[[ax1,ax1]],_Symbol];
+  quatToFrom\[Theta]V[angle1,sign1*UnitVector[3,ax1]]**quatToFrom\[Theta]V[angle2,sign2*UnitVector[3,ax2]]
+]
+
+
+qFromSymbolsOnlyM[m_]:=Module[
   {q0,q1,q2,q3},
   q0=Cases[Tr@m,Except[-_]]//Cases[#,_Symbol,-1]&//First;
   q1=DeleteCases[m[[2,3]]-m[[3,2]]//Expand,q0]/4;
   q2=DeleteCases[m[[3,1]]-m[[1,3]]//Expand,q0]/4;
   q3=DeleteCases[m[[1,2]]-m[[2,1]]//Expand,q0]/4;
-  {q0,q1,q2,q3}//qOut
+  {q0,q1,q2,q3}//Apply[quat]
+]
+
+
+qFrom180\[Degree]AroundAxisOutOfBasePlaneSymbolicM[m_]:=Module[
+  {mx=Expand@m,axis,signs},
+  axis=PowerExpand[Sqrt[Diagonal@mx]/._?Negative*_Symbol^2->0];
+  signs=Sign[Times@@@Map[Cases[#,_?NumberQ,{2}]&,ReplacePart[mx,{i_,i_}->Nothing]]];
+  Prepend[signs*axis,0]//Apply[quat]
+]
+
+
+qFromSymbolicMRotationInBasePlane[m_]:=Module[
+  {mx=Factor@m,norm,q0,syms,signs,qV},
+  norm=FirstCase[Diagonal@mx,_?NumberQ,1,{2}];
+  q0=FirstCase[Diagonal@mx,Cos[_],"",Infinity];
+  syms=Replace[List@@@Diagonal[mx/norm],{{_,-_,-_}->0,{_,x_,-_}:>x,{_,-_,x_}:>x},{1}]/.Sin[_]->1//Sqrt//PowerExpand;
+  signs=Switch[FirstPosition[syms,0],
+    {1},{0,Sign@First@mx[[3,1]],Sign@First@mx[[1,2]]},
+    {2},{Sign@First@mx[[2,3]],0,Sign@First@mx[[1,2]]},
+    {3},{Sign@First@mx[[2,3]],Sign@First@mx[[3,1]],0}
+  ];
+  qV=signs*syms*(q0/.Cos->Sin);
+  Sqrt[norm]*Prepend[qV,q0]//Apply[quat]
+]
+
+
+qFromSymbolicMRotationOutOfBasePlanes[m_]:=Module[
+  {mx=Factor@m,norm,q0,syms,signs,qV},
+  norm=FirstCase[Diagonal@mx,_?NumberQ,1,{2}]; 
+  q0=FirstCase[Diagonal@m,Cos[_],"",Infinity];
+  syms=Cases[Diagonal[mx/norm]/.{Cos[_]->0,Sin[_]->1,s_Symbol^2:>s},_Symbol,{2}];
+  signs=Map[Sign@First@Extract[mx,#]&,{{2,3},{3,1},{1,2}}];
+  qV=signs*syms*(q0/.Cos->Sin);
+  Sqrt[norm]*Prepend[qV,q0]//Apply[quat]
+]
+
+
+qFromEuler3SymbolicAnglesDistinctAxesM[m_]:=Module[
+  {mp=DeleteCases[m,-1,Infinity],ax1,ax2,ax3,sign1,sign2,sign3,angle1,angle2,angle3},
+  ax1=Last@First@Position[mp,Sin[t_Symbol],2];
+  ax2=First@FirstPosition[mp,Cos[s_Symbol]*Cos[u_Symbol]+Sin[s_Symbol]*Sin[t_Symbol]*Sin[u_Symbol]];
+  ax3=First@First@Position[mp,Sin[t_Symbol],2];
+  sign1=If[MatchQ[m[[ax3,ax2]],-_],-1,1]*-Signature[{ax1,ax2,ax3}];
+  sign2=If[MatchQ[m[[ax3,ax1]],-_],-1,1]*Signature[{ax1,ax2,ax3}];
+  sign3=If[MatchQ[m[[ax2,ax1]],-_],-1,1]*-Signature[{ax1,ax2,ax3}];
+  angle2=Cases[mp,Sin[x_]:>x,{2}]//First;
+  angle1=FirstCase[DeleteDuplicates[Cases[m[[ax3]],_Symbol,{-1}]],Except@angle2];
+  angle3=Complement[DeleteDuplicates[Cases[m,_Symbol,{-1}]],{angle1,angle2}]//First;
+  quatToFrom\[Theta]V[angle1,sign1*UnitVector[3,ax1]]**quatToFrom\[Theta]V[angle2,sign2*UnitVector[3,ax2]]**quatToFrom\[Theta]V[angle3,sign3*UnitVector[3,ax3]]
+]
+
+
+qFromEuler3SymbolicAnglesRepeatedAxisM[m_]:=Module[
+  {mp=DeleteCases[m,-1,Infinity],ax1,ax2,ax3,sign1,sign2,sign3,angle1,angle2,angle3},
+  ax1=First@First@Position[Diagonal@m,Cos[_Symbol],{1}];
+  ax2=First@First@Position[Diagonal@mp,Cos[s_Symbol]*Cos[u_Symbol]+Cos[t_Symbol]*Sin[s_Symbol]*Sin[u_Symbol],{1}];
+  ax3=First@First@Position[Diagonal@mp,Cos[s_Symbol]*Cos[t_Symbol]*Cos[u_Symbol]+Sin[s_Symbol]*Sin[u_Symbol],{1}];
+  sign1=If[Count[m[[ax1]],-1,Infinity]==1,1,-1]*Signature[{ax1,ax2,ax3}];
+  sign2=If[MatchQ[m[[ax1,ax3]],-_],1,-1]*Signature[{ax1,ax2,ax3}];
+  sign3=If[Count[m[[All,ax1]],-1,Infinity]==1,-1,1]*Signature[{ax1,ax2,ax3}];
+  angle2=Cases[m,Cos[x_]:>x,{2}]//First;
+  angle1=FirstCase[Cases[m[[ax1]],_Symbol,{-1}],Except[angle2]];
+  angle3=FirstCase[Cases[m[[All,ax1]],_Symbol,{-1}],Except[angle2]];
+  quatToFrom\[Theta]V[angle1,sign1*UnitVector[3,ax1]]**quatToFrom\[Theta]V[angle2,sign2*UnitVector[3,ax2]]**quatToFrom\[Theta]V[angle3,sign3*UnitVector[3,ax1]]
 ]
 
 
@@ -1014,7 +1087,7 @@ eulerZYXangles[m_,singularity_]:=Module[
       z=signedAngleBetweenVectors[{0,1,0},m[[2]],{0,0,1}];
       x=0
   ];
-  angles[[1]]={z,y,x}/\[Degree]//N//vOut;
+  angles[[1]]={z,y,x}/\[Degree]//N//Simplify//roundNumbers;
   Switch[singularity,
     False,
       angles[[2]]=
@@ -1086,124 +1159,6 @@ alignedMatrixDialogs[]:=Module[
 
 
 (* ::Subsubsection::Closed:: *)
-(*Rewriting quat*)
-
-
-rewriteQuatType39[q_List]:=If[FreeQ[First@q,Sin[_]],rewriteQuatType39HA[q],rewriteQuatType39FA[q]]
-
-
-rewriteQuatType39HA[q_List]:=Module[
-  {type,q0,qV},
-  type=If[MatchQ[First@q,1/2*Sqrt[_]],"A","B"];
-  q0=First@Cases[q,Cos[_Symbol],-1]/.Cos[\[Theta]_]:>Cos[\[Theta]/2];
-  qV=Switch[type,
-    "A",Take[q,-3]/.num_/Sqrt[_]:>num/(2 q0),
-    "B",Take[q,-3]/.num_/Sqrt[_]:>num/(2 Sqrt[2] q0)
-  ]//TrigExpand;
-  {q0,qV}//Flatten
-]
-
-
-rewriteQuatType39FA[q_List]:=Module[
-  {q0,qV},
-  q0=First@Cases[q,Cos[_],-1];
-  qV=Take[q,-3]/.num_/Sqrt[_]:>num/(2 q0)//TrigExpand;
-  {q0,qV}//Flatten
-]
-
-
-rewriteQuatType41[q_List]:=If[Depth[q]<8,rewriteQuatType41HA[q],rewriteQuatType41FA[q]]
-
-
-rewriteQuatType41HA[q_List]:=Module[
-  {eulerType,sign,angles,mid,\[Alpha]\[Beta]\[Gamma],q0,qV},
-  (* Structure *)
-  eulerType=If[Length@Cases[q,_Symbol,-1]<60,"IJK","IJI"];
-  sign=If[Count[First@q,-_,-1]>0,"N","P"];
-  angles=Cases[q,_Symbol,-1]//DeleteDuplicates//Sort;
-  mid=Function[First@First@Position[#,Max@#]][Count[q,Cos[#],-1]&/@angles];
-  \[Alpha]\[Beta]\[Gamma]=Switch[eulerType,
-    "IJK",angles,
-    "IJI",{angles[[mid]],angles[[Mod[mid+1,3,1]]],angles[[Mod[mid-1,3,1]]]}
-  ];
-  (* q0 *)
-  q0=Switch[{eulerType,sign},
-    {"IJK","N"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[2]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[3]]/2]-Sin[\[Alpha]\[Beta]\[Gamma][[1]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[2]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[3]]/2],
-    {"IJK","P"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[2]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[3]]/2]+Sin[\[Alpha]\[Beta]\[Gamma][[1]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[2]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[3]]/2],
-    {"IJI","N"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[2]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[3]]/2]-Cos[\[Alpha]\[Beta]\[Gamma][[1]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[2]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[3]]/2],
-    {"IJI","P"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[2]]/2] Cos[\[Alpha]\[Beta]\[Gamma][[3]]/2]+Cos[\[Alpha]\[Beta]\[Gamma][[1]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[2]]/2] Sin[\[Alpha]\[Beta]\[Gamma][[3]]/2]
-  ];
-  (* qV *)
-  qV=Take[q,-3]/.num_/Sqrt[_]:>num/(2 q0)//TrigExpand;
-  (* Out *)
-  {q0,qV}//Flatten
-]
-
-
-rewriteQuatType41FA[q_List]:=Module[
-  {eulerType,sign,angles,mid,\[Alpha]\[Beta]\[Gamma],q0,qV},
-  (* Structure *)
-  eulerType=If[Length@Cases[First@q,_Symbol,-1]>10,"IJK","IJI"];
-  sign=Switch[eulerType,
-    "IJK",If[Count[First@q,Cos[_],-1]>7,"N","P"],
-    "IJI",If[Count[First@q,-_,-1]==0,"N","P"]
-  ];
-  angles=Cases[q,_Symbol,-1]//DeleteDuplicates//Sort;
-  mid=Function[First@First@Position[#,Max@#]][Count[q,Cos[#],-1]&/@angles];
-  \[Alpha]\[Beta]\[Gamma]=Switch[eulerType,
-    "IJK",angles,
-    "IJI",{angles[[mid]],angles[[Mod[mid+1,3,1]]],angles[[Mod[mid-1,3,1]]]}
-  ];
-  (* q0 *)
-  q0=Switch[{eulerType,sign},
-    {"IJK","N"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]] Cos[\[Alpha]\[Beta]\[Gamma][[2]]] Cos[\[Alpha]\[Beta]\[Gamma][[3]]]-Sin[\[Alpha]\[Beta]\[Gamma][[1]]] Sin[\[Alpha]\[Beta]\[Gamma][[2]]] Sin[\[Alpha]\[Beta]\[Gamma][[3]]],
-    {"IJK","P"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]] Cos[\[Alpha]\[Beta]\[Gamma][[2]]] Cos[\[Alpha]\[Beta]\[Gamma][[3]]]+Sin[\[Alpha]\[Beta]\[Gamma][[1]]] Sin[\[Alpha]\[Beta]\[Gamma][[2]]] Sin[\[Alpha]\[Beta]\[Gamma][[3]]],
-    {"IJI","N"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]] Cos[\[Alpha]\[Beta]\[Gamma][[2]]] Cos[\[Alpha]\[Beta]\[Gamma][[3]]]-Cos[\[Alpha]\[Beta]\[Gamma][[1]]] Sin[\[Alpha]\[Beta]\[Gamma][[2]]] Sin[\[Alpha]\[Beta]\[Gamma][[3]]],
-    {"IJI","P"},Cos[\[Alpha]\[Beta]\[Gamma][[1]]] Cos[\[Alpha]\[Beta]\[Gamma][[2]]] Cos[\[Alpha]\[Beta]\[Gamma][[3]]]+Cos[\[Alpha]\[Beta]\[Gamma][[1]]] Sin[\[Alpha]\[Beta]\[Gamma][[2]]] Sin[\[Alpha]\[Beta]\[Gamma][[3]]]
-  ];
-  (* qV *)
-  qV=Switch[eulerType,
-    "IJK",Take[q,-3]/.num_/Sqrt[_]:>num/(2 q0)//TrigExpand,
-    "IJI",Take[q,-3]/.num_/Sqrt[_]:>num/q0//TrigExpand
-  ];
-  (* Out *)
-  {q0,qV}//Flatten
-]
-
-
-rewriteQuatType42[q_List]:=Module[
-  {cosines,q0,qV},
-  cosines=Cos[First@#/2]&/@Take[Cases[q,Cos[_],-1],2];
-  q0=Times@@cosines;
-  qV=Take[q,-3]/.num_/Sqrt[_]:>num/(2 q0)//TrigExpand;
-  {q0,qV}//Flatten
-]
-
-
-rewriteQuatType49[q_List]:=If[FreeQ[First@q,Sin[_]],rewriteQuatType49HA[q],rewriteQuatType49FA[q]]
-
-
-rewriteQuatType49HA[q_List]:=Module[
-  {type,q0,qV},
-  type=If[MatchQ[First@q,Sqrt[_]/(2 Sqrt[2])],"A","B"];
-  q0=First@Cases[q,Cos[_Symbol],-1]/.Cos[\[Theta]_]:>Cos[\[Theta]/2];
-  qV=Switch[type,
-    "A",Take[q,-3]/.num_/Sqrt[_]:>num/(2 Sqrt[2]q0),
-    "B",Take[q,-3]/.num_/Sqrt[_]:>num/(4 q0)
-  ]//TrigExpand;
-  {q0,qV}//Flatten
-]
-
-
-rewriteQuatType49FA[q_List]:=Module[
-  {q0,qV},
-  q0=First@Cases[q,Cos[_],-1];
-  qV=Take[q,-3]/.num_/Sqrt[_]:>num/(2 q0)//TrigExpand;
-  {q0,qV}//Flatten
-]
-
-
-(* ::Subsubsection::Closed:: *)
 (*Output formatting*)
 
 
@@ -1226,19 +1181,14 @@ qOut[qIn_List]:=With[
         x_*Sin[a_]/Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2]:>x*Sin[\[Theta]],
         x_*Sin[a_]/Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2]:>x*Sin[\[Theta]],sqAbsRule
       },
-    39,rewriteQuatType39[q],
-    41,rewriteQuatType41[q],
-    42,rewriteQuatType42[q],
-    49,rewriteQuatType49[q],
     _,q
   ]
 ]
 
 
-mOut[m_]:=m//Simplify//roundNumbers[#]&
-
-
-vOut[v_List]:=v//Simplify//roundNumbers[#]&
+mOut[m_]:=If[
+  Or[isMatrixType30[m],Count[m,Cos[_]|Sin[_],Infinity]>41],Simplify@m,m
+]//roundNumbers[#]&
 
 
 \[Theta]VOut[rotIn_List]:=With[
@@ -1257,7 +1207,7 @@ sqAbsRule:=Abs[s_]^p:2|-2:>s^p
 (*Version date*)
 
 
-quatVersionDate="2025-10-06";
+quatVersionDate="2025-12-21";
 
 
 (* ::Section::Closed:: *)
