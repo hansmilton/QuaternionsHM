@@ -319,15 +319,22 @@ quatToFromList[l_?qlistQ]:=l//qOut
 
 
 quatToFrom\[Theta]V[q_?quatQ]/;Norm@Chop@Rest[List@@q]===0:={First[q],{0,0,0}}
-quatToFrom\[Theta]V[q_?quatQ]/;symvectQ[Take[q,-3]]:=
-  {2 ArcCos[First@q],Take[List@@q,-3]/Sqrt[1-First[q]^2]}//\[Theta]VOut
+quatToFrom\[Theta]V[q:quat[q0_,__]?quatQ]/;And[NumericQ@q0,symvectQ[Rest[List@@q]],Abs[q0]>=1]:=
+  {0,{0,0,0}}
+quatToFrom\[Theta]V[q_?quatQ]/;symvectQ[Rest[List@@q]]:=Module[
+  {s=2 ArcCos[First@q],v=Rest[List@@q]},
+  v=If[Count[Chop@v,0]==2,Replace[v,_Symbol->1,{1,2}],v/Sqrt[1-First[q]^2]];
+  {s,v}
+]//\[Theta]VOut 
 quatToFrom\[Theta]V[q_?quatQ]:=
   {2 ArcCos[First@q/Norm@q],Normalize@Take[List@@q,-3]}//\[Theta]VOut
 
 quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scalarQ,v_?vectQ}]/;Norm@Chop@v===0:=
   quat[\[Theta],0,0,0]
 quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?symvectQ]|{\[Theta]_?scalarQ,v_?symvectQ}]:=
-  {Cos[\[Theta]/2],Sin[\[Theta]/2] v}//Flatten//qOut
+  If[Count[Chop@v,0]==2,
+    {Cos[\[Theta]/2],Sin[\[Theta]/2] v/.r_Symbol*Sin[\[Theta]/2]:>Sin[\[Theta]/2]},{Cos[\[Theta]/2],Sin[\[Theta]/2] v}
+  ]//Flatten//qOut
 quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scalarQ,v_?vectQ}]:=
   {Cos[\[Theta]/2],Sin[\[Theta]/2] Normalize@v}//Flatten//qOut
 
@@ -405,10 +412,7 @@ quatQ[q_]:=MatchQ[q,quat[_?scalarQ,_?scalarQ,_?scalarQ,_?scalarQ]]
 matQ[m_]:=MatrixQ[m,scalarQ]&&Dimensions[m]=={3,3}
 
 
-symbolQ[e_]:=MatchQ[e,s_Symbol/;!ValueQ[s,Method->"SymbolDefinitionsPresent"]]
-
-
-symvectQ[v_]:=And[vectQ[v],Count[Chop[v],0|_?symbolQ|-_?symbolQ]==3,Count[Chop[v],0]<3]
+symvectQ[v_]:=And[vectQ[v],Count[Chop@v,0|(e_/;!NumericQ[e])]==3,Count[Chop@v,0]<3]
 
 
 (* ::Subsubsection::Closed:: *)
@@ -895,7 +899,7 @@ qFromSymbolicM[m_]:=Module[
   q1=(m[[2,3]]-m[[3,2]])/(4 q0);
   q2=(m[[3,1]]-m[[1,3]])/(4 q0);
   q3=(m[[1,2]]-m[[2,1]])/(4 q0);
-  {q0,q1,q2,q3}//qOut
+  {q0,q1,q2,q3}//If[LeafCount[#]>220,Simplify@#,#]&//qOut
 ]
 
 
@@ -1186,9 +1190,7 @@ qOut[qIn_List]:=With[
 ]
 
 
-mOut[m_]:=If[
-  Or[isMatrixType30[m],Count[m,Cos[_]|Sin[_],Infinity]>41],Simplify@m,m
-]//roundNumbers[#]&
+mOut[m_]:=If[!MemberQ[{46,47},mType[m]],Simplify@m,m]//roundNumbers[#]&
 
 
 \[Theta]VOut[rotIn_List]:=With[
@@ -1207,7 +1209,7 @@ sqAbsRule:=Abs[s_]^p:2|-2:>s^p
 (*Version date*)
 
 
-quatVersionDate="2025-12-21";
+quatVersionDate="2026-01-12";
 
 
 (* ::Section::Closed:: *)
