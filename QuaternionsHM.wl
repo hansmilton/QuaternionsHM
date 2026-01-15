@@ -323,7 +323,10 @@ quatToFrom\[Theta]V[q:quat[q0_,__]?quatQ]/;And[NumericQ@q0,symvectQ[Rest[List@@q
   {0,{0,0,0}}
 quatToFrom\[Theta]V[q_?quatQ]/;symvectQ[Rest[List@@q]]:=Module[
   {s=2 ArcCos[First@q],v=Rest[List@@q]},
-  v=If[Count[Chop@v,0]==2,Replace[v,_Symbol->1,{1,2}],v/Sqrt[1-First[q]^2]];
+  v=If[Count[Chop@v,0]==2,
+    If[FreeQ[v,-1],Replace[v,Except[0|0.]->1,{1}],Replace[v,Except[0|0.]->-1,{1}]],
+    v/Sqrt[1-First[q]^2]
+  ];
   {s,v}
 ]//\[Theta]VOut 
 quatToFrom\[Theta]V[q_?quatQ]:=
@@ -1209,7 +1212,7 @@ sqAbsRule:=Abs[s_]^p:2|-2:>s^p
 (*Version date*)
 
 
-quatVersionDate="2026-01-12";
+quatVersionDate="2026-01-15";
 
 
 (* ::Section::Closed:: *)
