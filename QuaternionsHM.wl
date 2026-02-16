@@ -274,7 +274,7 @@ Module[
 
 
 quat/:Power[base_quat?quatQ,-1]/;Nor[Norm@base===0,Norm@base===0.]:=
-  Conjugate[base]/Norm[base]^2/.sqAbsRule//roundNumbers
+  Conjugate[base]/Norm[base]^2/.cmnOutRules//roundNumbers
 quat/:Power[base_quat?quatQ,exponent_?scalarQ]/;Nor[Norm@base===0,Norm@base===0.]:=
   Exp[exponent*Log@base]
 
@@ -282,21 +282,22 @@ quat/:Power[base_quat?quatQ,exponent_?scalarQ]/;Nor[Norm@base===0,Norm@base===0.
 quat/:Conjugate[quat[q0_,q1_,q2_,q3_]?quatQ]:=quat[q0,-q1,-q2,-q3]
 
 
-quat/:Norm[q_quat?quatQ]:=Norm[List@@q]/.sqAbsRule
+quat/:Norm[q_quat?quatQ]:=Norm[List@@q]/.cmnOutRules
 
 
-quat/:Normalize[q_quat?quatQ]:=Normalize[List@@q]//qOut
+quat/:Normalize[q_quat?quatQ]:=Normalize[List@@q]/.cmnOutRules//Apply[quat]
 
 
 quat/:Exp[q_quat?quatQ]:=With[
   {q0=First@q,qV=Rest[List@@q]},
-  E^q0 {Cos[Norm@qV],Normalize[qV] Sin[Norm@qV]}/.sqAbsRule//Flatten//qOut
+  E^q0 {Cos[Norm@qV],Normalize[qV] Sin[Norm@qV]}//Flatten//qOut
 ]
 
 
 quat/:Log[q_quat?quatQ]/;Nor[Norm@q===0,Norm@q===0.]:=With[
   {q0=First@q,qV=Rest[List@@q]},
-  {Log@TrigFactor@Norm[q], (Normalize[qV]/.sqAbsRule)*ArcCos[q0/Norm[q]]}//Flatten//quat@@#&//roundNumbers
+  {Log@Norm[q], Normalize[qV]*ArcCos[q0/Norm[q]]}/.cmnOutRules
+  //Flatten//roundNumbers//Apply[quat]
 ]
 
 
@@ -1173,21 +1174,8 @@ qOut[qIn_List]:=With[
   {q=roundNumbers[qIn]},
   quat@@Switch[qType[quat@@q],
     1,If[First@q<0,-q,q],
-    2,If[Chop@N@First@q<0,-q,q]/.{
-        1/2 Sqrt[1-Cos[\[Alpha]_]]:>Sin[\[Alpha]/2]/Sqrt[2],
-        1/2 Sqrt[1+3 Cos[\[Alpha]_]^2-Sin[\[Alpha]_]^2]:>Cos[\[Alpha]],1/2 Sqrt[r_ (3-3 Cos[\[Alpha]_]^2+Sin[\[Alpha]_]^2)]:>Sqrt[r] Sin[\[Alpha]],
-        Sqrt[Times[r_/;r===1/2,(1+Cos[\[Alpha]_]^2-Sin[\[Alpha]_]^2)]]:>Cos[\[Alpha]],Sqrt[r_ (1-Cos[\[Alpha]_]^2+Sin[\[Alpha]_]^2)]:>Sqrt[2 r] Sin[\[Alpha]],
-        1/2 Sqrt[1-Cos[\[Alpha]_]^2+Sin[\[Alpha]_]^2]:>Sqrt[1/2] Sin[\[Alpha]]
-      },
-    3|4,q/.{
-        1/2 Sqrt[2+2*Cos[\[Theta]_]]:>Cos[\[Theta]/2],Sin[\[Theta]_]/Sqrt[2+2*Cos[\[Theta]_]]:>Sin[\[Theta]/2],
-        (2*Cos[\[Theta]_]*Sin[\[Theta]_]+Sin[2*\[Theta]_])/(2*Sqrt[2+2*Cos[2*\[Theta]_]]):>Sin[\[Theta]],
-        1/2 Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2]:>Cos[\[Theta]],
-        1/2 Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2]:>Cos[\[Theta]],
-        1/2 Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2-z_^2*Sin[\[Theta]_]^2]:>Cos[\[Theta]],
-        x_*Sin[a_]/Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2]:>x*Sin[\[Theta]],
-        x_*Sin[a_]/Sqrt[1+3 Cos[\[Theta]_]^2-x_^2*Sin[\[Theta]_]^2-y_^2*Sin[\[Theta]_]^2]:>x*Sin[\[Theta]],sqAbsRule
-      },
+    2,If[Chop@N@First@q<0,-q,q]/.qOutRules,
+    3|4,q/.qOutRules,
     _,q
   ]
 ]
@@ -1196,23 +1184,30 @@ qOut[qIn_List]:=With[
 mOut[m_]:=If[!MemberQ[{46,47},mType[m]],Simplify@m,m]//roundNumbers[#]&
 
 
-\[Theta]VOut[rotIn_List]:=With[
-  {rot=roundNumbers[rotIn]},
-  Simplify[PowerExpand[rot]/. 1/Sqrt[1-Cos[\[Theta]_]^2]:>1/Sin[\[Theta]]]/.sqAbsRule
-]
+\[Theta]VOut[rot:{_,{_,_,_}}]:=roundNumbers@rot/.cmnOutRules//PowerExpand
 
 
 roundNumbers[x_]:=ReplaceAll[x,n_?MachineNumberQ:>If[Abs[n-Round@n]<10^-12,Round@n,n]]
 
 
-sqAbsRule:=Abs[s_]^p:2|-2:>s^p
+cmnOutRules={
+  Cos[\[Alpha]_]^2+Sin[\[Alpha]_]^2->1,1-Cos[\[Alpha]_]^2:>Sin[\[Alpha]]^2,1-Sin[\[Alpha]_]^2:>Cos[\[Alpha]]^2,
+  e_*Cos[\[Alpha]_]^2+e_*Sin[\[Alpha]_]^2:>e,Abs[s_]^p:2|-2:>s^p
+};
+
+
+qOutRules={
+  cmnOutRules,1-Cos[\[Alpha]_]:>2*Sin[\[Alpha]/2]^2,-1/2*Sqrt[2-2*Cos[\[Alpha]_]]:>-Sin[\[Alpha]/2],
+  1/2 Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>Cos[\[Alpha]],
+  x_*Sin[_]/Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>x*Sin[\[Alpha]]
+}//Flatten;
 
 
 (* ::Subsection::Closed:: *)
 (*Version date*)
 
 
-quatVersionDate="2026-01-15";
+quatVersionDate="2026-02-15";
 
 
 (* ::Section::Closed:: *)
