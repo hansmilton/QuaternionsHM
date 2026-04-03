@@ -120,6 +120,9 @@
 BeginPackage["QuaternionsHM`"]
 
 
+quatVersionDate="2026-04-03";
+
+
 (* ::Section::Closed:: *)
 (*Export of public functions by usage texts*)
 
@@ -187,8 +190,8 @@ StyleBox[\"vector\",\nFontSlant->\"Italic\"]\)}]. Returns quaternion.";
 
 quatToFromMatrix::usage=
 "Converts a quaternion to a 3x3 matrix, or vice verse.
-An input matrix where all elements are numeric has to be righthanded.
-An input matrix where all elements are explicit numbers does not have to be normalized.
+An input matrix where all elements are numeric has to be righthanded, but it
+do not have to be normalized.
 
 quatToFromMatrix[\!\(\*
 StyleBox[\"quat\",\nFontSlant->\"Italic\"]\)]. Returns matrix.
@@ -273,9 +276,9 @@ Module[
 ]
 
 
-quat/:Power[base_quat?quatQ,-1]/;Nor[Norm@base===0,Norm@base===0.]:=
+quat/:Power[base_quat?quatQ,-1]/;!MemberQ[{0,0.},Norm@base]:=
   Conjugate[base]/Norm[base]^2/.cmnOutRules//roundNumbers
-quat/:Power[base_quat?quatQ,exponent_?scalarQ]/;Nor[Norm@base===0,Norm@base===0.]:=
+quat/:Power[base_quat?quatQ,exponent_?scalarQ]/;!MemberQ[{0,0.},Norm@base]:=
   Exp[exponent*Log@base]
 
 
@@ -294,7 +297,7 @@ quat/:Exp[q_quat?quatQ]:=With[
 ]
 
 
-quat/:Log[q_quat?quatQ]/;Nor[Norm@q===0,Norm@q===0.]:=With[
+quat/:Log[q_quat?quatQ]/;!MemberQ[{0,0.},Norm@q]:=With[
   {q0=First@q,qV=Rest[List@@q]},
   {Log@Norm[q], Normalize[qV]*ArcCos[q0/Norm[q]]}/.cmnOutRules
   //Flatten//roundNumbers//Apply[quat]
@@ -337,7 +340,7 @@ quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scala
   quat[\[Theta],0,0,0]
 quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?symvectQ]|{\[Theta]_?scalarQ,v_?symvectQ}]:=
   If[Count[Chop@v,0]==2,
-    {Cos[\[Theta]/2],Sin[\[Theta]/2] v/.r_Symbol*Sin[\[Theta]/2]:>Sin[\[Theta]/2]},{Cos[\[Theta]/2],Sin[\[Theta]/2] v}
+    {Cos[\[Theta]/2],Sin[\[Theta]/2]*Replace[v,{-_Symbol->-1,_Symbol->1},{1}]},{Cos[\[Theta]/2],Sin[\[Theta]/2] v}
   ]//Flatten//qOut
 quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scalarQ,v_?vectQ}]:=
   {Cos[\[Theta]/2],Sin[\[Theta]/2] Normalize@v}//Flatten//qOut
@@ -853,10 +856,10 @@ mFromSymbolsOnlyQ[q:quat[q0_,q1_,q2_,q3_]]:=Module[
 (*quatToFromMatrix, matrix input*)
 
 
-qFromNumberM[minput_]:=
+qFromNumberM[mIn_]:=
 Module[
   {m,diffvects,changeorder,indexA,indexB,unitRotAx,scaledRotAx,angle},
-  m=Orthogonalize@minput;
+  m=Orthogonalize@mIn;
   diffvects=m-IdentityMatrix@3;
   changeorder=Ordering@N@Diagonal@m;
   indexA=changeorder[[1]];
@@ -866,44 +869,46 @@ Module[
   angle=signedAngleBetweenVectors[
     UnitVector[3,indexA]-scaledRotAx,m[[indexA]]-scaledRotAx,unitRotAx
   ];
-  Times[Sqrt@Norm@minput,Flatten@{Cos[angle/2],Sin[angle/2]*unitRotAx}]//qOut
+  Sqrt[Norm@mIn]*Prepend[Sin[angle/2]*unitRotAx,Cos[angle/2]]//qOut
 ]
 
 
-qFromNumeric180\[Degree]M[minput_]:=
+qFromNumeric180\[Degree]M[mIn_]:=
 Module[
   {m,diffvects,changeorder,indexA,indexB,rotAxis},
-  m=Orthogonalize@minput;
+  m=Normalize[mIn,Norm];
   diffvects=m-IdentityMatrix@3;
   changeorder=Ordering@N@Diagonal@m;
   indexA=changeorder[[1]];
   indexB=changeorder[[2]];
   rotAxis=Normalize[diffvects[[indexA]]\[Cross]diffvects[[indexB]]];
-  Times[Sqrt@Norm@minput,Flatten@{0,rotAxis}]//qOut
+  Sqrt[Norm@mIn]*Prepend[rotAxis,0]//qOut
 ]
 
 
-qFromNumericM[m_]:=Module[
-  {cos\[Theta]h,sin\[Theta]h,axis,v1,v2,v3},
-  If[Norm@N@m!=1,Return@qFromNumberM[N@m]];
-  cos\[Theta]h=Sqrt[1+Tr@m]/2;
-  sin\[Theta]h=Sqrt[3-Tr@m]/2;
-  v1=m[[2,3]]-m[[3,2]];
-  v2=m[[3,1]]-m[[1,3]];
-  v3=m[[1,2]]-m[[2,1]];
-  axis=sin\[Theta]h Normalize@{v1,v2,v3};
-  {cos\[Theta]h,axis}//Flatten//Simplify//qOut
+qFromNumericM[mIn_]:=Module[
+  {norm,m,q0,q0v,axis},
+  norm=Norm[N@mIn]//Rationalize;
+  If[!MatchQ[norm,_Integer|_Rational],Return[qFromNumberM@N@mIn]];
+  m=(mIn/norm)/.\[Degree]->\[Pi]/180;
+  q0=Replace[Sqrt[1+Tr@m]/2//Simplify,
+    {
+    Sqrt[Times[r_/;r==1/2,1-Sin[\[Alpha]_]]]:>Cos[(\[Pi]/2+\[Alpha])/2],
+    Sqrt[Times[r_/;r==1/2,1+Sin[\[Alpha]_]]]:>Cos[(\[Pi]/2-\[Alpha])/2]
+    }
+  ];
+  q0v=Replace[q0,{Cos[\[Alpha]_]:>Sin[\[Alpha]],Sin[\[Alpha]_]:>Cos[\[Alpha]],e_:>Simplify[Sqrt[1-q0^2]]}];
+  axis={m[[2,3]]-m[[3,2]],m[[3,1]]-m[[1,3]],m[[1,2]]-m[[2,1]]}//Simplify//Normalize//Simplify;
+  Sqrt[norm]*Prepend[q0v*axis,q0]//qOut
 ]
 
 
 qFromSymbolicM[m_]:=Module[
-  {q0,q1,q2,q3},
-  If[is180\[Degree]Matrix[m],Print@Framed["No quat matches this matrix",FrameStyle->Red];Return@m];
-  q0=Sqrt[m[[1,1]]+m[[2,2]]+m[[3,3]]+1]/2;
-  q1=(m[[2,3]]-m[[3,2]])/(4 q0);
-  q2=(m[[3,1]]-m[[1,3]])/(4 q0);
-  q3=(m[[1,2]]-m[[2,1]])/(4 q0);
-  {q0,q1,q2,q3}//If[LeafCount[#]>220,Simplify@#,#]&//qOut
+  {q0,qV},
+  If[is180\[Degree]Matrix[m],Print@Framed["Cannot convert this 180\[Degree] matrix to quat",FrameStyle->Red];Return@m];
+  q0=Sqrt[1+Tr@m]/2;
+  qV={m[[2,3]]-m[[3,2]],m[[3,1]]-m[[1,3]],m[[1,2]]-m[[2,1]]}/(4 q0);
+  Prepend[qV,q0]//If[LeafCount[#]>220,Simplify@#,#]&//qOut
 ]
 
 
@@ -1181,7 +1186,7 @@ qOut[qIn_List]:=With[
 ]
 
 
-mOut[m_]:=If[!MemberQ[{46,47},mType[m]],Simplify@m,m]//roundNumbers[#]&
+mOut[m_]:=If[!MemberQ[{46,47},mType[m]],Simplify@m,m]//ReplaceAll[cmnOutRules]//roundNumbers[#]&
 
 
 \[Theta]VOut[rot:{_,{_,_,_}}]:=roundNumbers@rot/.cmnOutRules//PowerExpand
@@ -1192,22 +1197,27 @@ roundNumbers[x_]:=ReplaceAll[x,n_?MachineNumberQ:>If[Abs[n-Round@n]<10^-12,Round
 
 cmnOutRules={
   Cos[\[Alpha]_]^2+Sin[\[Alpha]_]^2->1,1-Cos[\[Alpha]_]^2:>Sin[\[Alpha]]^2,1-Sin[\[Alpha]_]^2:>Cos[\[Alpha]]^2,
+  Cos[\[Alpha]_]^2-Sin[\[Alpha]_]^2:>Cos[2*\[Alpha]],-Cos[\[Alpha]_]^2+Sin[\[Alpha]_]^2:>-Cos[2*\[Alpha]],
   e_*Cos[\[Alpha]_]^2+e_*Sin[\[Alpha]_]^2:>e,Abs[s_]^p:2|-2:>s^p
 };
 
 
 qOutRules={
-  cmnOutRules,1-Cos[\[Alpha]_]:>2*Sin[\[Alpha]/2]^2,-1/2*Sqrt[2-2*Cos[\[Alpha]_]]:>-Sin[\[Alpha]/2],
+  cmnOutRules,
+  1-Cos[\[Alpha]_]:>2*Sin[\[Alpha]/2]^2,
+  -1/2*Sqrt[2-2*Cos[\[Alpha]_]]:>-Sin[\[Alpha]/2],
   1/2 Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>Cos[\[Alpha]],
-  x_*Sin[_]/Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>x*Sin[\[Alpha]]
+  x_*Sin[_]/Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>x*Sin[\[Alpha]],
+  Sqrt[Times[r_/;r==1/2,1+Cos[\[Alpha]_]]]:>Cos[\[Alpha]/2],
+  Sqrt[Times[r_/;r==1/2,1-Cos[\[Alpha]_]]]:>Sin[\[Alpha]/2],
+  Sqrt[1+2*Cos[\[Alpha]_]^2+Cos[\[Beta]_]]/;\[Beta]==2*\[Alpha]:>2*Cos[\[Alpha]],
+  Sqrt[1+2*Cos[\[Alpha]_]^2+Sin[\[Beta]_]]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>2*Cos[\[Alpha]],
+  Sqrt[1-Sin[\[Beta]_]+2*Sin[\[Alpha]_]^2]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>2*Sin[\[Alpha]],
+  Sqrt[Times[r_/;r==1/2,3+Cos[\[Beta]_]-2*Sin[\[Alpha]_]^2]]/;\[Beta]==2*\[Alpha]:>Cos[\[Alpha]]*Sqrt[2],
+  Sqrt[Times[r_/;r==1/2,3-2*Cos[\[Alpha]_]^2-Cos[\[Beta]_]]]/;\[Beta]==2*\[Alpha]:>Sin[\[Alpha]]*Sqrt[2],
+  Sqrt[Times[r_/;r==1/2,3+Sin[\[Beta]_]-2*Sin[\[Alpha]_]^2]]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>Cos[\[Alpha]]*Sqrt[2],
+  Sqrt[Times[r_/;r==1/2,3-2*Cos[\[Alpha]_]^2-Sin[\[Beta]_]]]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>Sin[\[Alpha]]*Sqrt[2]
 }//Flatten;
-
-
-(* ::Subsection::Closed:: *)
-(*Version date*)
-
-
-quatVersionDate="2026-02-15";
 
 
 (* ::Section::Closed:: *)
