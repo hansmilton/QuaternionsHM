@@ -120,7 +120,7 @@
 BeginPackage["QuaternionsHM`"]
 
 
-quatVersionDate="2026-04-03";
+quatVersionDate="2026-09-20";
 
 
 (* ::Section::Closed:: *)
@@ -252,9 +252,6 @@ are colinear with axes of the reference frame. Matrix elements from the set {-1,
 quatFromAlignedMatrix[ ]. No arguments. Returns quaternion.";
 
 
-quatVersionDate::usage="Date of last update";
-
-
 (* ::Section::Closed:: *)
 (*Begin Private*)
 
@@ -346,14 +343,14 @@ quatToFrom\[Theta]V[PatternSequence[\[Theta]_?scalarQ,v_?vectQ]|{\[Theta]_?scala
   {Cos[\[Theta]/2],Sin[\[Theta]/2] Normalize@v}//Flatten//qOut
 
 
-quatToFromMatrix[q_?quatQ/;qType@q==40]:=mFromSymbolsOnlyQ[q]
+quatToFromMatrix[q_?quatQ/;qType@q==40]:=mFromPureSymbolicQ[q]
 quatToFromMatrix[q_?quatQ]:=Map[quatRotateVector[q,#]&,IdentityMatrix[3]]//mOut
 
 quatToFromMatrix[m_?matQ]:=Switch[mType@m,
   1,qFromNumberM[m],
   2,qFromNumericM[m],
-  3,qFromSymbolicM[m],
-  4,qFromSymbolicM[m],
+  3,defaultMtoQ[m],
+  4,defaultMtoQ[m],
   21,qFromNumeric180\[Degree]M[m],
   30,qFromSymbolicAngleRotAroundBaseAxisM[m],
   31,qFromSymbolicIdentityM[m],
@@ -363,7 +360,7 @@ quatToFromMatrix[m_?matQ]:=Switch[mType@m,
   35,qFrom180\[Degree]AroundPlaneDiagonalSymbolicM[m],
   36,qFrom180\[Degree]AroundAxisInBasePlaneSymbolicM[m],
   38,qFromEuler2SymbolicAnglesM[m],
-  41,qFromSymbolsOnlyM[m],
+  41,qFromPureSymbolicM[m],
   45,qFrom180\[Degree]AroundAxisOutOfBasePlaneSymbolicM[m],
   46,qFromSymbolicMRotationInBasePlane[m],
   47,qFromSymbolicMRotationOutOfBasePlanes[m],
@@ -833,7 +830,7 @@ isMatrixType49[m_]:=With[
 (*quatToFromMatrix, quat input*)
 
 
-mFromSymbolsOnlyQ[q:quat[q0_,q1_,q2_,q3_]]:=Module[
+mFromPureSymbolicQ[q:quat[q0_,q1_,q2_,q3_]]:=Module[
   {m=IdentityMatrix@3,qV,trace},
   qV=Numerator/@Take[q,-3];
   m[[2,3]]=First@Cases[qV[[1]],Except[-_]];
@@ -900,15 +897,6 @@ qFromNumericM[mIn_]:=Module[
   q0v=Replace[q0,{Cos[\[Alpha]_]:>Sin[\[Alpha]],Sin[\[Alpha]_]:>Cos[\[Alpha]],e_:>Simplify[Sqrt[1-q0^2]]}];
   axis={m[[2,3]]-m[[3,2]],m[[3,1]]-m[[1,3]],m[[1,2]]-m[[2,1]]}//Simplify//Normalize//Simplify;
   Sqrt[norm]*Prepend[q0v*axis,q0]//qOut
-]
-
-
-qFromSymbolicM[m_]:=Module[
-  {q0,qV},
-  If[is180\[Degree]Matrix[m],Print@Framed["Cannot convert this 180\[Degree] matrix to quat",FrameStyle->Red];Return@m];
-  q0=Sqrt[1+Tr@m]/2;
-  qV={m[[2,3]]-m[[3,2]],m[[3,1]]-m[[1,3]],m[[1,2]]-m[[2,1]]}/(4 q0);
-  Prepend[qV,q0]//If[LeafCount[#]>220,Simplify@#,#]&//qOut
 ]
 
 
@@ -997,7 +985,7 @@ qFromEuler2SymbolicAnglesM[m_]:=Module[
 ]
 
 
-qFromSymbolsOnlyM[m_]:=Module[
+qFromPureSymbolicM[m_]:=Module[
   {q0,q1,q2,q3},
   q0=Cases[Tr@m,Except[-_]]//Cases[#,_Symbol,-1]&//First;
   q1=DeleteCases[m[[2,3]]-m[[3,2]]//Expand,q0]/4;
@@ -1068,6 +1056,15 @@ qFromEuler3SymbolicAnglesRepeatedAxisM[m_]:=Module[
   angle1=FirstCase[Cases[m[[ax1]],_Symbol,{-1}],Except[angle2]];
   angle3=FirstCase[Cases[m[[All,ax1]],_Symbol,{-1}],Except[angle2]];
   quatToFrom\[Theta]V[angle1,sign1*UnitVector[3,ax1]]**quatToFrom\[Theta]V[angle2,sign2*UnitVector[3,ax2]]**quatToFrom\[Theta]V[angle3,sign3*UnitVector[3,ax1]]
+]
+
+
+defaultMtoQ[m_]:=Module[
+  {q0,qV},
+  If[is180\[Degree]Matrix[m],Print@Framed["Cannot convert this 180\[Degree] matrix to quat",FrameStyle->Red];Return@m];
+  q0=Sqrt[1+Tr@m]/2;
+  qV={m[[2,3]]-m[[3,2]],m[[3,1]]-m[[1,3]],m[[1,2]]-m[[2,1]]}/(4 q0);
+  Prepend[qV,q0]//If[LeafCount[#]>220,Simplify@#,#]&//qOut
 ]
 
 
