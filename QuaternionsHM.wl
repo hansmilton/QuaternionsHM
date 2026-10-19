@@ -120,7 +120,7 @@
 BeginPackage["QuaternionsHM`"]
 
 
-quatVersionDate="2026-09-20";
+quatVersionDate="2026-10-18";
 
 
 (* ::Section::Closed:: *)
@@ -896,7 +896,7 @@ qFromNumericM[mIn_]:=Module[
   ];
   q0v=Replace[q0,{Cos[\[Alpha]_]:>Sin[\[Alpha]],Sin[\[Alpha]_]:>Cos[\[Alpha]],e_:>Simplify[Sqrt[1-q0^2]]}];
   axis={m[[2,3]]-m[[3,2]],m[[3,1]]-m[[1,3]],m[[1,2]]-m[[2,1]]}//Simplify//Normalize//Simplify;
-  Sqrt[norm]*Prepend[q0v*axis,q0]//qOut
+  Times[Sqrt[norm],Prepend[q0v*axis,q0]//qOut]
 ]
 
 
@@ -1202,18 +1202,18 @@ cmnOutRules={
 qOutRules={
   cmnOutRules,
   1-Cos[\[Alpha]_]:>2*Sin[\[Alpha]/2]^2,
-  -1/2*Sqrt[2-2*Cos[\[Alpha]_]]:>-Sin[\[Alpha]/2],
+  1+Cos[\[Alpha]_]:>2*Cos[\[Alpha]/2]^2,
+  1+2*Cos[\[Alpha]_]^2+Sin[\[Beta]_]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>4*Cos[\[Alpha]]^2,
+  1+2*Sin[\[Alpha]_]^2-Sin[\[Beta]_]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>4*Sin[\[Alpha]]^2,
+  3-2*Sin[\[Alpha]_]^2+Cos[\[Beta]_]/;\[Beta]==2\[Alpha]:>4*Cos[\[Alpha]]^2,
+  3-2*Cos[\[Alpha]_]^2-Cos[\[Beta]_]/;\[Beta]==2\[Alpha]:>4*Sin[\[Alpha]]^2,
+  3-2*Sin[\[Alpha]_]^2+Sin[\[Beta]_]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>4*Cos[\[Alpha]]^2,
+  3-2*Cos[\[Alpha]_]^2-Sin[\[Beta]_]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>4*Sin[\[Alpha]]^2,
+  3-3*Cos[\[Alpha]_]^2+Sin[\[Alpha]_]^2:>4*Sin[\[Alpha]]^2,
+  3+Cos[\[Alpha]_]^2-3*Sin[\[Alpha]_]^2:>4*Cos[\[Alpha]]^2,
+  5-2*Cos[\[Alpha]_]^2-3*Cos[\[Beta]_]/;\[Beta]==2*\[Alpha]:>8*Sin[\[Alpha]]^2,
   1/2 Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>Cos[\[Alpha]],
-  x_*Sin[_]/Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>x*Sin[\[Alpha]],
-  Sqrt[Times[r_/;r==1/2,1+Cos[\[Alpha]_]]]:>Cos[\[Alpha]/2],
-  Sqrt[Times[r_/;r==1/2,1-Cos[\[Alpha]_]]]:>Sin[\[Alpha]/2],
-  Sqrt[1+2*Cos[\[Alpha]_]^2+Cos[\[Beta]_]]/;\[Beta]==2*\[Alpha]:>2*Cos[\[Alpha]],
-  Sqrt[1+2*Cos[\[Alpha]_]^2+Sin[\[Beta]_]]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>2*Cos[\[Alpha]],
-  Sqrt[1-Sin[\[Beta]_]+2*Sin[\[Alpha]_]^2]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>2*Sin[\[Alpha]],
-  Sqrt[Times[r_/;r==1/2,3+Cos[\[Beta]_]-2*Sin[\[Alpha]_]^2]]/;\[Beta]==2*\[Alpha]:>Cos[\[Alpha]]*Sqrt[2],
-  Sqrt[Times[r_/;r==1/2,3-2*Cos[\[Alpha]_]^2-Cos[\[Beta]_]]]/;\[Beta]==2*\[Alpha]:>Sin[\[Alpha]]*Sqrt[2],
-  Sqrt[Times[r_/;r==1/2,3+Sin[\[Beta]_]-2*Sin[\[Alpha]_]^2]]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>Cos[\[Alpha]]*Sqrt[2],
-  Sqrt[Times[r_/;r==1/2,3-2*Cos[\[Alpha]_]^2-Sin[\[Beta]_]]]/;2*\[Alpha]+\[Beta]==\[Pi]/2:>Sin[\[Alpha]]*Sqrt[2]
+  x_*Sin[_]/Sqrt[1+3 Cos[\[Alpha]_]^2-x_^2*Sin[\[Alpha]_]^2-y_^2*Sin[\[Alpha]_]^2]:>x*Sin[\[Alpha]]3
 }//Flatten;
 
 
